@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   AnimatePresence,
@@ -8,10 +9,12 @@ import {
   useReducedMotion,
   useMotionValue,
   useTransform,
+  useScroll,
   animate,
   useInView,
+  useSpring,
 } from "framer-motion";
-import { MapPin, FlaskConical, Droplets, Shield, Search, ChevronRight , Activity, FileText, Video, Building2 } from "lucide-react";
+import { MapPin, FlaskConical, Droplets, Shield, Search, ChevronRight , Activity, FileText, Video, Building2, Settings, Mic, MicOff, Phone, AlertTriangle, Calendar, Clock } from "lucide-react";
 import SplitText from "@/components/ui/SplitText";
 import styles from "./HeroSearchFirst.module.css";
 import Lottie from "lottie-react";
@@ -20,7 +23,43 @@ import starAnimation from "../../../public/assets/AI Searching 2.json";
 import PixelRipple from "./PixelRipple";
 import PulseAIWorkspace from "../pulse-ai/PulseAIWorkspace";
 
+const STAT_GROUPS = [
+  [
+    { value: 5000, suffix: "+", label: "Robotic Surgeries\nPerformed" },
+    { value: 550000, suffix: "+", label: "Cardiac Consults\nAnnually" },
+    { value: 33000, suffix: "+", label: "Image Guided\nProcedures" },
+    { value: 8000, suffix: "+", label: "Solid Organ\nTransplants" }
+  ],
+  [
+    { value: 80000, suffix: "+", label: "Chemotherapy Sessions\nAnnually" },
+    { value: 15000, suffix: "+", label: "Joint Replacements\nPerformed" },
+    { value: 2000, suffix: "+", label: "Bone Marrow\nTransplants" },
+    { value: 120000, suffix: "+", label: "Dialysis Sessions\nAnnually" }
+  ]
+];
+
 const popularTags = ["chest pain", "cancer", "surgery", "liver"];
+
+// Emergency keywords — trigger urgency banner
+const EMERGENCY_KEYWORDS = [
+  "chest pain", "heart attack", "stroke", "can't breathe", "cannot breathe",
+  "difficulty breathing", "unconscious", "seizure", "severe bleeding", "not breathing",
+  "collapsed", "overdose", "poisoning", "severe chest", "crushing pain"
+];
+
+const isEmergencyQuery = (q: string) =>
+  EMERGENCY_KEYWORDS.some(kw => q.toLowerCase().includes(kw.toLowerCase()));
+
+// Intent detection helper
+const detectIntent = (query: string, doctors: {name:string}[], specs: {name:string}[]) => {
+  const q = query.toLowerCase().trim();
+  if (q.startsWith("dr") || q.includes("doctor")) return "Doctor";
+  if (doctors.some(d => d.name.toLowerCase().includes(q))) return "Doctor";
+  if (specs.some(s => s.name.toLowerCase().includes(q))) return "Speciality";
+  const symptomWords = ["pain", "fever", "cough", "ache", "swelling", "bleeding", "nausea", "dizzy", "weakness", "fatigue", "vomit", "feel", "have", "suffering"];
+  if (symptomWords.some(w => q.includes(w))) return "Symptom";
+  return "Treatment";
+};
 
 // Speciality lists for auto-suggest with semantic keywords (symptoms, organs, treatments)
 const specialitiesData = [
@@ -101,10 +140,36 @@ const specialitiesData = [
     slug: "dental-care",
     image: "/Specialities icons/Dental.svg",
     keywords: ["teeth", "toothache", "root canal", "dental", "oral", "gums", "braces"]
+  },
+  { 
+    name: "General Medicine", 
+    slug: "general-medicine",
+    image: "/Specialities icons/General Medicine.svg",
+    keywords: ["fever", "cough", "cold", "flu", "infection", "headache", "weakness", "vomiting", "general physician", "physician", "body pain", "viral"] 
   }
 ];
 
-const doctorsData = [
+
+
+const AVAILABILITY_SLOTS = [
+  "Today 2:00 PM", "Today 4:30 PM", "Today 6:00 PM",
+  "Tomorrow 9:00 AM", "Tomorrow 11:30 AM", "Tomorrow 3:00 PM",
+  "Thu 10:00 AM", "Thu 2:30 PM", "Fri 9:00 AM"
+];
+
+type DoctorData = {
+  name: string;
+  speciality: string;
+  location: string;
+  hospital: string;
+  additionalHospitals?: number;
+  photo: string;
+  keywords: string[];
+  consultationModes?: "hospital" | "video" | "both";
+  nextAvailable?: string;
+};
+
+const doctorsData: DoctorData[] = [
   {
     name: "Dr. Ravi Prakash",
     speciality: "Cardiology",
@@ -113,7 +178,7 @@ const doctorsData = [
     additionalHospitals: 1,
     photo: "/assets/doctor_1.png",
     keywords: ["cardiology", "heart", "ravi", "prakash", "doctor", "specialist", "cardiologist"],
-    consultationModes: "both"
+    nextAvailable: "Today 4:30 PM"
   },
   {
     name: "Dr. Ravi Kumar",
@@ -122,7 +187,7 @@ const doctorsData = [
     hospital: "Narayana Superspeciality Hospital, Guwahati",
     photo: "/assets/doctor_2.png",
     keywords: ["cardiology", "heart", "ravi", "kumar", "doctor", "specialist", "cardiologist"],
-    consultationModes: "hospital"
+    nextAvailable: "Tomorrow 9:00 AM"
   },
   {
     name: "Dr. Ravi Shankar",
@@ -132,7 +197,7 @@ const doctorsData = [
     additionalHospitals: 2,
     photo: "/assets/doctor_3.png",
     keywords: ["neurology", "brain", "ravi", "shankar", "doctor", "specialist", "neurologist"],
-    consultationModes: "video"
+    nextAvailable: "Today 6:00 PM"
   },
   {
     name: "Dr. Prakash Sharma",
@@ -141,7 +206,7 @@ const doctorsData = [
     hospital: "Narayana Multispeciality Hospital, HSR Bangalore",
     photo: "/assets/doctor_1.png",
     keywords: ["cardiology", "heart", "prakash", "sharma", "doctor", "specialist", "cardiologist"],
-    consultationModes: "both"
+    nextAvailable: "Thu 10:00 AM"
   },
   {
     name: "Dr. Prakash Gupta",
@@ -150,7 +215,7 @@ const doctorsData = [
     hospital: "Narayana Superspeciality Hospital, Howrah, kolkata",
     photo: "/assets/doctor_2.png",
     keywords: ["orthopaedics", "bone", "prakash", "gupta", "doctor", "specialist", "orthopaedic"],
-    consultationModes: "hospital"
+    nextAvailable: "Tomorrow 11:30 AM"
   },
   {
     name: "Dr. Rajiv Menon",
@@ -159,7 +224,7 @@ const doctorsData = [
     hospital: "Mazumdar Shaw Medical Centre, Bangalore",
     photo: "/assets/doctor_3.png",
     keywords: ["cardiology", "heart", "rajiv", "menon", "doctor", "specialist", "cardiologist"],
-    consultationModes: "video"
+    nextAvailable: "Today 2:00 PM"
   },
   {
     name: "Dr. Priya Sharma",
@@ -169,7 +234,7 @@ const doctorsData = [
     additionalHospitals: 1,
     photo: "/assets/doctor_1.png",
     keywords: ["neurology", "brain", "priya", "sharma", "doctor", "specialist", "neurologist"],
-    consultationModes: "both"
+    nextAvailable: "Fri 9:00 AM"
   },
   {
     name: "Dr. Arun Krishnan",
@@ -178,7 +243,7 @@ const doctorsData = [
     hospital: "Narayana Multispeciality Hospital, Barasat, kolkata",
     photo: "/assets/doctor_2.png",
     keywords: ["oncology", "cancer", "arun", "krishnan", "doctor", "specialist", "oncologist"],
-    consultationModes: "hospital"
+    nextAvailable: "Thu 2:30 PM"
   },
   {
     name: "Dr. Sunita Patel",
@@ -187,9 +252,37 @@ const doctorsData = [
     hospital: "Narayana Multispeciality Clinic, HSR Bangalore",
     photo: "/assets/doctor_3.png",
     keywords: ["orthopaedics", "bone", "joint", "sunita", "patel", "doctor", "specialist"],
-    consultationModes: "both"
+    nextAvailable: "Today 6:00 PM"
+  },
+  {
+    name: "Dr. Vikram Seth",
+    speciality: "General Medicine",
+    location: "Bengaluru",
+    hospital: "Narayana Health City, Bangalore",
+    photo: "/assets/doctor_avatar_male.png",
+    keywords: ["general medicine", "fever", "cough", "cold", "flu", "vikram", "seth", "doctor", "physician"],
+    nextAvailable: "Today 4:30 PM"
+  },
+  {
+    name: "Dr. Shalini Singh",
+    speciality: "General Medicine",
+    location: "Mumbai",
+    hospital: "NH Children's Hospital, Mumbai",
+    photo: "/assets/doctor_avatar_female.png",
+    keywords: ["general medicine", "fever", "cough", "cold", "flu", "shalini", "singh", "doctor", "physician"],
+    nextAvailable: "Tomorrow 9:00 AM"
   }
 ];
+
+const getRealtimePulseResponse = (query: string) => {
+  return {
+    suggestedSpec: "Cardiology",
+    suggestedDoc: doctorsData[0],
+    empathy: "I understand you are feeling unwell. Let's find a doctor for you.",
+    slot: "Today, 4:00 PM",
+    recommendedDocs: doctorsData.slice(0, 3)
+  };
+};
 
 const doctorRoles = [
   {
@@ -387,7 +480,15 @@ function CountingNumber({ value, suffix = "", duration = 2 }: { value: number, s
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-10px" });
   const count = useMotionValue(0);
-  const rounded = useTransform(count, (latest) => Math.round(latest).toLocaleString('en-IN') + suffix);
+  const rounded = useTransform(count, (latest) => {
+    const num = Math.round(latest);
+    if (num >= 100000) {
+      return (num / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 }) + 'L' + suffix;
+    } else if (num >= 1000) {
+      return (num / 1000).toLocaleString('en-IN', { maximumFractionDigits: 1 }) + 'K' + suffix;
+    }
+    return num.toLocaleString('en-IN') + suffix;
+  });
 
   useEffect(() => {
     if (isInView) {
@@ -399,284 +500,6 @@ function CountingNumber({ value, suffix = "", duration = 2 }: { value: number, s
   return <motion.span ref={ref}>{rounded}</motion.span>;
 }
 
-interface RealtimePulseResponse {
-  empathy: string;
-  suggestedDoc: {
-    id: string;
-    name: string;
-    qualification: string;
-    speciality: string;
-    hospital: string;
-    plusHospitals?: number;
-    slot: string;
-    price: string;
-    rating: number;
-    photo: string;
-    location?: string;
-  };
-  suggestedSpec: string;
-  slot: string;
-  recommendedDocs: any[];
-}
-
-function getRealtimePulseResponse(query: string): RealtimePulseResponse {
-  const ql = query.toLowerCase();
-  
-  if (ql.includes("heart") || ql.includes("chest") || ql.includes("cardio")) {
-    const recs = [
-      {
-        id: "d2",
-        name: "Dr. Ananya Krishnan",
-        qualification: "MBBS, DM (Cardiology)",
-        speciality: "Cardiologist",
-        hospital: "Narayana Institute of Cardiac Sciences",
-        plusHospitals: 0,
-        slot: "Today, 05:00 PM",
-        price: "₹1,200",
-        rating: 4.8,
-        photo: "/assets/doctor_2.png",
-        location: "Bengaluru"
-      },
-      {
-        id: "d_card_2",
-        name: "Dr. Devi Prasad Shetty",
-        qualification: "MS, FRCS",
-        speciality: "Cardiac Surgeon",
-        hospital: "Narayana Institute of Cardiac Sciences",
-        plusHospitals: 3,
-        slot: "Tomorrow, 10:30 AM",
-        price: "₹1,500",
-        rating: 4.99,
-        photo: "/assets/doctor_1.png",
-        location: "Bengaluru"
-      },
-      {
-        id: "d_card_3",
-        name: "Dr. Rajesh R. Sharma",
-        qualification: "MD, DM (Cardiology)",
-        speciality: "Cardiologist",
-        hospital: "Mazumdar Shaw Medical Centre",
-        plusHospitals: 1,
-        slot: "Tomorrow, 03:00 PM",
-        price: "₹1,100",
-        rating: 4.75,
-        photo: "/assets/doctor_2.png",
-        location: "Bengaluru"
-      }
-    ];
-    return {
-      empathy: "Recommended Care Pathway: Cardiology review based on your profile & preferred clinic.",
-      suggestedDoc: recs[0],
-      suggestedSpec: "Cardiology",
-      slot: "Today, 05:00 PM",
-      recommendedDocs: recs
-    };
-  }
-  
-  if (ql.includes("brain") || ql.includes("nerve") || ql.includes("headache") || ql.includes("stroke") || ql.includes("tremor") || ql.includes("migraine")) {
-    const recs = [
-      {
-        id: "d_neuro_1",
-        name: "Dr. Vikas Yadav",
-        qualification: "MBBS, MD (Neurology)",
-        speciality: "Neurologist",
-        hospital: "Mazumdar Shaw Medical Centre",
-        plusHospitals: 0,
-        slot: "Today, 04:00 PM",
-        price: "₹1,000",
-        rating: 4.85,
-        photo: "/assets/doctor_1.png",
-        location: "Bengaluru"
-      },
-      {
-        id: "d_neuro_2",
-        name: "Dr. Sunil Kumar",
-        qualification: "MBBS, DM (Neurology)",
-        speciality: "Neurologist",
-        hospital: "Mazumdar Shaw Medical Centre",
-        plusHospitals: 2,
-        slot: "Tomorrow, 11:00 AM",
-        price: "₹1,200",
-        rating: 4.8,
-        photo: "/assets/doctor_2.png",
-        location: "Bengaluru"
-      },
-      {
-        id: "d_neuro_3",
-        name: "Dr. Preeti Sinha",
-        qualification: "MBBS, MD, DNB",
-        speciality: "Neurologist",
-        hospital: "Narayana Superspeciality Hospital",
-        plusHospitals: 1,
-        slot: "Tomorrow, 02:00 PM",
-        price: "₹1,000",
-        rating: 4.7,
-        photo: "/assets/doctor_1.png",
-        location: "Bengaluru"
-      }
-    ];
-    return {
-      empathy: "Recommended Care Pathway: Neurology consultation based on your health records.",
-      suggestedDoc: recs[0],
-      suggestedSpec: "Neurology",
-      slot: "Today, 04:00 PM",
-      recommendedDocs: recs
-    };
-  }
-
-  if (ql.includes("cancer") || ql.includes("tumor") || ql.includes("oncology") || ql.includes("lump")) {
-    const recs = [
-      {
-        id: "d_onc_1",
-        name: "Dr. Rajiv Menon",
-        qualification: "MBBS, MS, MCh (Oncology)",
-        speciality: "Surgical Oncologist",
-        hospital: "Mazumdar Shaw Medical Centre",
-        plusHospitals: 2,
-        slot: "Thu, 10:00 AM",
-        price: "₹1,500",
-        rating: 4.95,
-        photo: "/assets/doctor_1.png",
-        location: "Bengaluru"
-      },
-      {
-        id: "d_onc_2",
-        name: "Dr. Someshwar Rao",
-        qualification: "MBBS, MD, DM",
-        speciality: "Medical Oncologist",
-        hospital: "Mazumdar Shaw Medical Centre",
-        plusHospitals: 1,
-        slot: "Tomorrow, 04:00 PM",
-        price: "₹1,400",
-        rating: 4.85,
-        photo: "/assets/doctor_2.png",
-        location: "Bengaluru"
-      },
-      {
-        id: "d_onc_3",
-        name: "Dr. Aruna Dev",
-        qualification: "MBBS, DNB (Oncology)",
-        speciality: "Radiation Oncologist",
-        hospital: "Narayana Superspeciality Hospital",
-        plusHospitals: 1,
-        slot: "Tomorrow, 09:30 AM",
-        price: "₹1,200",
-        rating: 4.9,
-        photo: "/assets/doctor_1.png",
-        location: "Bengaluru"
-      }
-    ];
-    return {
-      empathy: "Recommended Care Pathway: Oncology consult at Narayana Superspeciality.",
-      suggestedDoc: recs[0],
-      suggestedSpec: "Oncology",
-      slot: "Thu, 10:00 AM",
-      recommendedDocs: recs
-    };
-  }
-
-  if (ql.includes("bone") || ql.includes("joint") || ql.includes("fracture") || ql.includes("knee") || ql.includes("back pain")) {
-    const recs = [
-      {
-        id: "d_ortho_1",
-        name: "Dr. Vikas Yadav",
-        qualification: "MBBS, MS (Ortho)",
-        speciality: "Orthopaedician",
-        hospital: "Mazumdar Shaw Medical Centre",
-        plusHospitals: 0,
-        slot: "Today, 04:00 PM",
-        price: "₹1,000",
-        rating: 4.85,
-        photo: "/assets/doctor_1.png",
-        location: "Bengaluru"
-      },
-      {
-        id: "d_ortho_2",
-        name: "Dr. Sandeep Naik",
-        qualification: "MBBS, MS (Ortho)",
-        speciality: "Orthopaedician",
-        hospital: "Mazumdar Shaw Medical Centre",
-        plusHospitals: 1,
-        slot: "Tomorrow, 12:00 PM",
-        price: "₹1,000",
-        rating: 4.8,
-        photo: "/assets/doctor_2.png",
-        location: "Bengaluru"
-      },
-      {
-        id: "d_ortho_3",
-        name: "Dr. R. K. Sen",
-        qualification: "MBBS, MS, MCh",
-        speciality: "Orthopaedic Surgeon",
-        hospital: "Narayana Superspeciality Hospital",
-        plusHospitals: 1,
-        slot: "Tomorrow, 04:00 PM",
-        price: "₹1,300",
-        rating: 4.75,
-        photo: "/assets/doctor_1.png",
-        location: "Bengaluru"
-      }
-    ];
-    return {
-      empathy: "Recommended Care Pathway: Orthopaedics consult based on activity and history.",
-      suggestedDoc: recs[0],
-      suggestedSpec: "Orthopaedics",
-      slot: "Today, 04:00 PM",
-      recommendedDocs: recs
-    };
-  }
-
-  const defaultRecs = [
-    {
-      id: "d1",
-      name: "Dr. Pradeep R Kumar",
-      qualification: "MBBS, MD",
-      speciality: "General Physician",
-      hospital: "Mazumdar Shaw Medical Centre",
-      plusHospitals: 1,
-      slot: "Tomorrow, 02:30 PM",
-      price: "₹800",
-      rating: 4.9,
-      photo: "/assets/doctor_1.png",
-      location: "Bengaluru"
-    },
-    {
-      id: "d_gp_2",
-      name: "Dr. S. S. Murthy",
-      qualification: "MBBS, MD (Medicine)",
-      speciality: "General Physician",
-      hospital: "Mazumdar Shaw Medical Centre",
-      plusHospitals: 0,
-      slot: "Tomorrow, 10:00 AM",
-      price: "₹700",
-      rating: 4.8,
-      photo: "/assets/doctor_2.png",
-      location: "Bengaluru"
-    },
-    {
-      id: "d_gp_3",
-      name: "Dr. Maria Fernandes",
-      qualification: "MBBS, MD",
-      speciality: "General Physician",
-      hospital: "Narayana Multispeciality Clinic",
-      plusHospitals: 1,
-      slot: "Tomorrow, 11:30 AM",
-      price: "₹650",
-      rating: 4.7,
-      photo: "/assets/doctor_1.png",
-      location: "Bengaluru"
-    }
-  ];
-
-  return {
-    empathy: "Recommended Care Pathway: General Physician consult based on history & location.",
-    suggestedDoc: defaultRecs[0],
-    suggestedSpec: "General Medicine",
-    slot: "Tomorrow, 02:30 PM",
-    recommendedDocs: defaultRecs
-  };
-}
-
 export default function HeroSearchFirst() {
 
   const router = useRouter();
@@ -684,16 +507,86 @@ export default function HeroSearchFirst() {
   const [activeDropdownTab, setActiveDropdownTab] = useState<"doctors_specialities" | "treatments_tests" | "articles">("doctors_specialities");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const [currentStatGroup, setCurrentStatGroup] = React.useState(0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentStatGroup(prev => (prev + 1) % STAT_GROUPS.length);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
   const [hasOpened, setHasOpened] = useState(false);
   const [isPulseActive, setIsPulseActive] = useState(false);
   const [isPulseAnalyzed, setIsPulseAnalyzed] = useState(false);
   const [hasSubmittedQuery, setHasSubmittedQuery] = useState(false);
   const [showGenericMatchesInPulse, setShowGenericMatchesInPulse] = useState(false);
   const [simulatedUserLocation, setSimulatedUserLocation] = useState<"same_city" | "nearby" | "far_away">("same_city");
+  const [userCity, setUserCity] = useState("Pune"); // user's home city
+  const [cityInputValue, setCityInputValue] = useState("");
+  const [showCityPicker, setShowCityPicker] = useState(false);
+
+  // Cities where NH has facilities (nearby city for fallback = first in list closest to user)
+  const NH_CITIES = ["Bengaluru", "Mumbai", "Kolkata", "Delhi", "Hyderabad", "Chennai", "Guwahati", "Jaipur", "Kochi"];
+  const hasNHInCity = (city: string) => NH_CITIES.some(c => c.toLowerCase() === city.toLowerCase());
+  const nearestNHCity = "Mumbai"; // in production this would be geo-calculated
+  const [showPixelRipple, setShowPixelRipple] = useState(false);
+
+  // Enhancement states
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const [focusedResultIndex, setFocusedResultIndex] = useState(-1);
+
   const [pulseInitialAction, setPulseInitialAction] = useState<string | null>(null);
   const [pulseInitialActionData, setPulseInitialActionData] = useState<any>(null);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(true);
-  const [showPixelRipple, setShowPixelRipple] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Load recent searches from sessionStorage
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("nh_recent_searches");
+      if (saved) setRecentSearches(JSON.parse(saved));
+    }
+  }, []);
+
+  const saveRecentSearch = (query: string) => {
+    if (!query.trim()) return;
+    setRecentSearches(prev => {
+      const updated = [query, ...prev.filter(s => s !== query)].slice(0, 5);
+      sessionStorage.setItem("nh_recent_searches", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const startVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+      setIsOpen(true);
+      setHasOpened(true);
+    };
+    recognition.start();
+  };
+
+  // Sync the locations filter dropdown with the selected scenario
+  useEffect(() => {
+    if (simulatedUserLocation === "nearby") {
+      setSelectedLocation("Mumbai");
+    } else {
+      setSelectedLocation("All Locations");
+    }
+  }, [simulatedUserLocation]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -706,6 +599,19 @@ export default function HeroSearchFirst() {
     };
     window.addEventListener("login-state-changed", handleLoginChange);
     return () => window.removeEventListener("login-state-changed", handleLoginChange);
+  }, []);
+
+  useEffect(() => {
+    const handleOpenPulse = () => {
+      setHasOpened(true);
+      setIsPulseActive(true);
+      // Give time for layout to shift before animating content
+      setTimeout(() => setIsPulseAnalyzed(true), 300);
+      setSearchQuery("");
+      setHasSubmittedQuery(false);
+    };
+    window.addEventListener("openPulseAI", handleOpenPulse);
+    return () => window.removeEventListener("openPulseAI", handleOpenPulse);
   }, []);
 
   const handlePulseLaunchWithAction = (action: string, doctorData: any) => {
@@ -722,6 +628,8 @@ export default function HeroSearchFirst() {
       setIsPulseActive(true);
     }
   };
+
+  const [showDemoSettings, setShowDemoSettings] = useState(false);
 
   const isConversational = searchQuery.trim().split(" ").length > 3 || 
                           /have|fever|cough|tomorrow|symptom|feel|pain/i.test(searchQuery.trim());
@@ -746,6 +654,25 @@ export default function HeroSearchFirst() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const prefersReducedMotion = useReducedMotion();
 
+  // Scroll Animation Logic
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "center start"]
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 80,
+    damping: 25,
+    mass: 1,
+    restDelta: 0.001
+  });
+
+  // Complete the animation over 100% of the wrapper's extra scroll distance
+  const heroScale = useTransform(smoothProgress, [0, 1], [1, 0.85]);
+  // Border radius from 0 to 8px
+  const heroRadius = useTransform(smoothProgress, [0, 1], ["0px", "16px"]);
+
   const handleScrollDown = () => {
     const nextSection = document.getElementById("hero-section")?.nextElementSibling;
     if (nextSection) {
@@ -765,12 +692,9 @@ export default function HeroSearchFirst() {
     }
   }, []);
 
-  // Reset dropdown tab and inline analysis when query changes
+  // Reset dropdown tab to Doctors when typing/query changes
   useEffect(() => {
     setActiveDropdownTab("doctors_specialities");
-    setIsPulseAnalyzed(false);
-    setHasSubmittedQuery(false);
-    setShowGenericMatchesInPulse(false);
   }, [searchQuery]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -781,24 +705,9 @@ export default function HeroSearchFirst() {
         localStorage.setItem("nh_last_search", query);
         setLastSearch(query);
       }
-
-      // Pulse Trigger Heuristic
-      const isConversational = query.split(" ").length > 3 || 
-                               /have|fever|cough|tomorrow|symptom|feel|pain/i.test(query);
-
-      if (isConversational) {
-        if (!hasSubmittedQuery) {
-          setHasSubmittedQuery(true);
-        } else if (!isPulseAnalyzed) {
-          setIsPulseAnalyzed(true);
-        } else {
-          setIsPulseActive(true);
-          setIsOpen(false);
-        }
-      } else {
-        router.push(`/search?q=${encodeURIComponent(query)}`);
-        setIsOpen(false);
-      }
+      saveRecentSearch(query);
+      setHasSubmittedQuery(true);
+      setIsOpen(true);
     }
   };
 
@@ -807,9 +716,14 @@ export default function HeroSearchFirst() {
       localStorage.setItem("nh_last_search", name);
       setLastSearch(name);
     }
-    router.push(`/search?q=${encodeURIComponent(name)}`);
-    setIsOpen(false);
-    setIsPulseActive(false);
+    saveRecentSearch(name);
+    setSearchQuery(name);
+    setHasSubmittedQuery(true);
+    setIsOpen(true);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") { setIsOpen(false); setFocusedResultIndex(-1); }
   };
 
   // Filter lists based on input (semantic keyword search & exact name match)
@@ -823,7 +737,7 @@ export default function HeroSearchFirst() {
         const nameMatch = doc.name.toLowerCase().includes(searchQuery.toLowerCase());
         const specMatch = doc.speciality.toLowerCase().includes(searchQuery.toLowerCase());
         const matchingKeyword = doc.keywords.find((kw) => 
-          kw.toLowerCase().includes(searchQuery.toLowerCase())
+          searchQuery.toLowerCase().includes(kw.toLowerCase())
         );
 
         return {
@@ -845,7 +759,7 @@ export default function HeroSearchFirst() {
     : specialitiesData.map((spec) => {
         const nameMatch = spec.name.toLowerCase().includes(searchQuery.toLowerCase());
         const matchingKeyword = spec.keywords.find((kw) => 
-          kw.toLowerCase().includes(searchQuery.toLowerCase())
+          searchQuery.toLowerCase().includes(kw.toLowerCase())
         );
 
         return {
@@ -864,7 +778,7 @@ export default function HeroSearchFirst() {
     : treatmentsData.map((t) => {
         const nameMatch = t.name.toLowerCase().includes(searchQuery.toLowerCase());
         const matchingKeyword = t.keywords.find((kw) => 
-          kw.toLowerCase().includes(searchQuery.toLowerCase())
+          searchQuery.toLowerCase().includes(kw.toLowerCase())
         );
 
         return {
@@ -886,7 +800,7 @@ export default function HeroSearchFirst() {
     : articlesData.map((a) => {
         const nameMatch = a.name.toLowerCase().includes(searchQuery.toLowerCase());
         const matchingKeyword = a.keywords.find((kw) => 
-          kw.toLowerCase().includes(searchQuery.toLowerCase())
+          searchQuery.toLowerCase().includes(kw.toLowerCase())
         );
 
         return {
@@ -900,25 +814,6 @@ export default function HeroSearchFirst() {
       .sort((a, b) => b.score - a.score)
       .slice(0, 6);
 
-  const conversationalSpecs = [
-    { name: "General Physician", slug: "general-physician", image: "/Specialities icons/General Medicine.svg" },
-    { name: "ENT", slug: "ent", image: "/Specialities icons/Lab test default icon.svg" }
-  ];
-
-  const conversationalDoctors = [
-    { name: "Dr. Pradeep R Kumar", speciality: "General Physician", hospital: "Mazumdar Shaw Medical Centre, Bangalore", photo: "/assets/doctor_1.png" },
-    { name: "Dr. Rammaya Murthey", speciality: "General Physician", hospital: "Narayana Institute of Cardiac Sciences, Bangalore", photo: "/assets/doctor_2.png" },
-    { name: "Dr. Vikas Yadav", speciality: "ENT Specialist", hospital: "Narayana City Clinic, Bangalore", photo: "/assets/doctor_1.png" }
-  ];
-
-  const displaySpecs = isConversational && (filteredSpecs.length === 0 || /fever|cough|symptom|headache|stomach|pain|feel/i.test(searchQuery))
-    ? conversationalSpecs
-    : filteredSpecs.slice(0, 2);
-
-  const displayDoctors = isConversational && (filteredDoctors.length === 0 || /fever|cough|symptom|headache|stomach|pain|feel/i.test(searchQuery))
-    ? conversationalDoctors
-    : filteredDoctors.slice(0, 3);
-
   const hasSuggestions = filteredDoctors.length > 0 || filteredSpecs.length > 0 || filteredTreatments.length > 0 || filteredArticles.length > 0;
 
   // Close dropdown on click outside and reset search query
@@ -931,19 +826,19 @@ export default function HeroSearchFirst() {
     }
     document.addEventListener("mousedown", handleClickOutside);
   
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Control video playback based on search state
+  // Control video playback based on search state or Pulse AI state
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined = undefined;
     
     if (videoRef.current) {
-      if (isOpen) {
+      if (isOpen || isPulseActive) {
         // Smoothly slow down the video
         let rate = videoRef.current.playbackRate;
         intervalId = setInterval(() => {
-          if (videoRef.current && isOpen) {
+          if (videoRef.current && (isOpen || isPulseActive)) {
             rate -= 0.05; // Decrease rate gradually
             if (rate <= 0.1) {
               videoRef.current.pause();
@@ -965,21 +860,64 @@ export default function HeroSearchFirst() {
       }
     }
     return () => clearInterval(intervalId);
-  }, [isOpen]);
+  }, [isOpen, isPulseActive]);
 
   return (
-    <section className={styles.hero} id="hero-section-search-first">
-      <video
+    <div ref={containerRef} style={{ height: "130vh", position: "relative", zIndex: isPulseActive ? 9999 : 1, background: "#ffffff" }}>
+      <motion.section 
+        className={styles.hero} 
+        id="hero-section-search-first"
+        style={{
+          scale: heroScale,
+          borderRadius: heroRadius,
+        }}
+      >
+        <video
         ref={videoRef}
-        src="/Hero-Video-New.mp4"
+        src="/videos/Hero-Video-New.mp4"
         autoPlay
         muted
         loop
         playsInline
         className={styles.bgVideo}
       />
-      <div className={`${styles.videoOverlay} ${isOpen ? styles.videoOverlayActive : ""}`} />
-      <PixelRipple trigger={showPixelRipple} />
+      <div className={`${styles.videoOverlay} ${isOpen && !isPulseActive ? styles.videoOverlayActive : ""}`} />
+
+      <div className={styles.metricsSideWrap}>
+        <motion.div 
+          initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+          animate={isOpen ? { opacity: 0, y: 20, filter: "blur(8px)", pointerEvents: "none" } : { opacity: 1, y: 0, filter: "blur(0px)", pointerEvents: "auto" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className={styles.metricsRow}
+        >
+          {STAT_GROUPS[currentStatGroup].map((stat, i) => (
+            <div className={styles.metricItem} key={i}>
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.25, delay: i * 0.05, ease: "easeOut" }}
+                  style={{ display: "flex", flexDirection: "column" }}
+                >
+                  <div className={styles.metricValue}>
+                    <CountingNumber value={stat.value} suffix={stat.suffix} />
+                  </div>
+                  <div className={styles.metricLabel}>
+                    {stat.label.split('\n').map((line, idx) => (
+                      <React.Fragment key={idx}>
+                        {line}
+                        {idx !== stat.label.split('\n').length - 1 && <br/>}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          ))}
+        </motion.div>
+      </div>
 
       <div className={styles.centerWrap}>
         <div className={styles.heroStack}>
@@ -1010,8 +948,7 @@ export default function HeroSearchFirst() {
                       : hasOpened 
                         ? { duration: 0.2, ease: "easeOut" } 
                         : { delay: 0.4, duration: 0.6 }
-                    }
-                  >
+                    }>
                     {!isPulseActive && (
                       <div className={`${styles.searchContainer} ${isOpen ? styles.searchContainerActive : ""}`}>
                       <div
@@ -1051,10 +988,32 @@ export default function HeroSearchFirst() {
                           setIsOpen(true);
                           setHasOpened(true);
                         }}
+                        onKeyDown={handleSearchKeyDown}
                         className={styles.searchInput}
                       />
+                      
+                      {/* Voice Speech Recognition input button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          startVoiceInput();
+                        }}
+                        className={`${styles.micButton} ${isListening ? styles.micListening : ""}`}
+                        title="Voice Search"
+                      >
+                        {isListening ? <MicOff size={16} color="#ef4444" /> : <Mic size={16} color="#6b7280" />}
+                      </button>
 
                     </div>
+                    )}
+
+                    {/* Intent Classifier Tag */}
+                    {isOpen && searchQuery.trim().length >= 2 && (
+                      <div className={styles.intentIndicator}>
+                        🔍 Smart Search: matching <strong>{detectIntent(searchQuery, doctorsData, specialitiesData)}</strong>
+                      </div>
                     )}
 
                     {/* Progressive Search Dropdown */}
@@ -1069,120 +1028,237 @@ export default function HeroSearchFirst() {
                           transition={{ duration: 0.2, ease: "easeOut" }}
                           data-lenis-prevent
                         >
-                          {/* Location Simulation Bar */}
-                          <div 
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              padding: "6px 12px",
-                              background: "#f8fafc",
-                              borderRadius: "12px",
-                              marginBottom: "10px",
-                              border: "1px solid #e2e8f0",
-                              flexShrink: 0
-                            }}
-                          >
-                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569", display: "flex", alignItems: "center", gap: "4px" }}>
-                              📍 Simulating Location:
-                            </span>
-                            <div style={{ display: "flex", gap: "6px" }}>
-                              <button
-                                type="button"
-                                onClick={() => setSimulatedUserLocation("same_city")}
-                                style={{
-                                  padding: "4px 10px",
-                                  borderRadius: "9999px",
-                                  fontSize: "10.5px",
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  background: simulatedUserLocation === "same_city" ? "#16a34a" : "white",
-                                  color: simulatedUserLocation === "same_city" ? "white" : "#475569",
-                                  border: "1px solid #cbd5e1",
-                                  transition: "all 0.15s ease"
-                                }}
-                              >
-                                Same City
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setSimulatedUserLocation("nearby")}
-                                style={{
-                                  padding: "4px 10px",
-                                  borderRadius: "9999px",
-                                  fontSize: "10.5px",
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  background: simulatedUserLocation === "nearby" ? "#ea580c" : "white",
-                                  color: simulatedUserLocation === "nearby" ? "white" : "#475569",
-                                  border: "1px solid #cbd5e1",
-                                  transition: "all 0.15s ease"
-                                }}
-                              >
-                                Nearby (100km)
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setSimulatedUserLocation("far_away")}
-                                style={{
-                                  padding: "4px 10px",
-                                  borderRadius: "9999px",
-                                  fontSize: "10.5px",
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  background: simulatedUserLocation === "far_away" ? "#7c3aed" : "white",
-                                  color: simulatedUserLocation === "far_away" ? "white" : "#475569",
-                                  border: "1px solid #cbd5e1",
-                                  transition: "all 0.15s ease"
-                                }}
-                              >
-                                Far Away (Video)
-                              </button>
+                          {/* 🚨 Urgency Detection Banner */}
+                          {searchQuery.trim() && isEmergencyQuery(searchQuery) && (
+                            <div className={styles.urgencyBanner}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <AlertTriangle size={16} color="#ffffff" style={{ animation: "pulse 1s infinite" }} />
+                                <span style={{ fontWeight: 700, fontSize: "12px" }}>
+                                  Emergency Alert: If you are experiencing severe symptoms, please contact medical help immediately.
+                                </span>
+                              </div>
+                              <a href="tel:1066" className={styles.urgencyPhone}>
+                                <Phone size={11} fill="#ffffff" /> Call NH Emergency: 1066
+                              </a>
                             </div>
-                          </div>
+                          )}
 
-                          {/* Location simulation description banner */}
+                          {/* Location scenario communication banner */}
                           {searchQuery.trim() && simulatedUserLocation !== "same_city" && (
-                            <div 
-                              style={{
-                                padding: "8px 12px",
-                                background: simulatedUserLocation === "nearby" ? "#fffbeb" : "#faf5ff",
-                                border: simulatedUserLocation === "nearby" ? "1px solid #fef3c7" : "1px solid #f3e8ff",
-                                borderRadius: "10px",
-                                color: simulatedUserLocation === "nearby" ? "#b45309" : "#6b21a8",
-                                fontSize: "11px",
-                                fontWeight: 600,
-                                marginBottom: "10px",
+                            <div style={{ marginBottom: "12px", flexShrink: 0 }}>
+                              <div style={{
+                                background: "#ffffff",
+                                border: "1px solid #e5e7eb",
+                                borderLeft: `3px solid ${simulatedUserLocation === "nearby" ? "#f97316" : "#6366f1"}`,
+                                borderRadius: "8px",
+                                padding: "10px 12px",
                                 display: "flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                flexShrink: 0
-                              }}
-                            >
-                              {simulatedUserLocation === "nearby" ? (
-                                <span>📍 No Narayana Health facilities found in your city. Showing matches from the nearest available facility (within 100km).</span>
-                              ) : (
-                                <span>💻 No facilities available in your area. Showing doctors available for online video consultation.</span>
-                              )}
+                                flexDirection: "column",
+                                gap: "8px",
+                              }}>
+                                {/* Single row: icon + message + two balanced actions */}
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                  {/* Icon */}
+                                  <div style={{
+                                    width: "28px",
+                                    height: "28px",
+                                    borderRadius: "50%",
+                                    background: simulatedUserLocation === "nearby" ? "#fff7ed" : "#eef2ff",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexShrink: 0,
+                                  }}>
+                                    {simulatedUserLocation === "nearby"
+                                      ? <MapPin size={13} color="#f97316" />
+                                      : <Video size={13} color="#6366f1" />}
+                                  </div>
+
+                                  {/* Message */}
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: "11.5px", fontWeight: 700, color: "#111827", lineHeight: 1.3 }}>
+                                      {simulatedUserLocation === "nearby"
+                                        ? <>No NH facility in <span style={{ color: "#f97316" }}>{userCity}</span> — showing doctors from <span style={{ color: "#059669" }}>{nearestNHCity}</span></>
+                                        : <>Video consultation only — no NH in <span style={{ color: "#6366f1" }}>{userCity}</span></>}
+                                    </div>
+                                    {/* Inline change city link */}
+                                    <button
+                                      type="button"
+                                      onClick={() => { setShowCityPicker(p => !p); setCityInputValue(""); }}
+                                      style={{
+                                        background: "none", border: "none", padding: 0,
+                                        fontSize: "10px", color: "#6b7280", cursor: "pointer",
+                                        textDecoration: "underline", textUnderlineOffset: "2px",
+                                        marginTop: "2px", display: "block"
+                                      }}
+                                    >
+                                      {showCityPicker ? "Cancel" : "Not your city? Change it"}
+                                    </button>
+                                  </div>
+
+                                  {/* Balanced CTAs — ghost + solid */}
+                                  <div style={{ display: "flex", gap: "6px", flexShrink: 0, alignItems: "center" }}>
+                                    {/* Secondary: switch mode */}
+                                    <button
+                                      type="button"
+                                      onClick={() => setSimulatedUserLocation(simulatedUserLocation === "nearby" ? "far_away" : "nearby")}
+                                      style={{
+                                        background: "transparent",
+                                        color: simulatedUserLocation === "nearby" ? "#6366f1" : "#f97316",
+                                        border: `1px solid ${simulatedUserLocation === "nearby" ? "#c7d2fe" : "#fed7aa"}`,
+                                        borderRadius: "6px",
+                                        padding: "4px 10px",
+                                        fontSize: "10px",
+                                        fontWeight: 600,
+                                        cursor: "pointer",
+                                        whiteSpace: "nowrap",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "3px",
+                                      }}
+                                    >
+                                      {simulatedUserLocation === "nearby"
+                                        ? <><Video size={9} /> Video only</>
+                                        : <><MapPin size={9} /> See {nearestNHCity}</>}
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* City picker — expands inline */}
+                                {showCityPicker && (
+                                  <div style={{
+                                    borderTop: "1px solid #f3f4f6",
+                                    paddingTop: "8px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "6px"
+                                  }}>
+                                    <input
+                                      type="text"
+                                      placeholder="Search city…"
+                                      value={cityInputValue}
+                                      onChange={e => setCityInputValue(e.target.value)}
+                                      autoFocus
+                                      style={{
+                                        width: "100%",
+                                        padding: "6px 10px",
+                                        borderRadius: "6px",
+                                        border: "1px solid #e5e7eb",
+                                        fontSize: "11px",
+                                        outline: "none",
+                                        background: "#f9fafb",
+                                        boxSizing: "border-box",
+                                        color: "#111827",
+                                      }}
+                                    />
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                                      {[...NH_CITIES, "Pune", "Ahmedabad", "Surat", "Nagpur"]
+                                        .filter(c => !cityInputValue || c.toLowerCase().includes(cityInputValue.toLowerCase()))
+                                        .map(city => {
+                                          const hasNH = hasNHInCity(city);
+                                          return (
+                                            <button
+                                              key={city}
+                                              type="button"
+                                              onClick={() => {
+                                                setUserCity(city);
+                                                setShowCityPicker(false);
+                                                setSimulatedUserLocation(hasNH ? "same_city" : "nearby");
+                                              }}
+                                              style={{
+                                                padding: "3px 9px",
+                                                borderRadius: "20px",
+                                                border: "1px solid #e5e7eb",
+                                                background: hasNH ? "#f0fdf4" : "#fafafa",
+                                                color: hasNH ? "#15803d" : "#374151",
+                                                fontSize: "10.5px",
+                                                fontWeight: 500,
+                                                cursor: "pointer",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "4px",
+                                              }}
+                                            >
+                                              {hasNH
+                                                ? <span style={{ fontSize: "9px", color: "#16a34a" }}>●</span>
+                                                : <span style={{ fontSize: "9px", color: "#d1d5db" }}>○</span>}
+                                              {city}
+                                            </button>
+                                          );
+                                        })}
+                                    </div>
+                                    <p style={{ fontSize: "9.5px", color: "#9ca3af", margin: 0 }}>
+                                      <span style={{ color: "#16a34a" }}>●</span> NH facility available &nbsp;
+                                      <span style={{ color: "#d1d5db" }}>○</span> No NH — will show nearest city
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
 
                           {!searchQuery.trim() ? (
                     <div className={styles.popularSearchesContainer}>
-                      {/* Popular Tags */}
-                      <div className={styles.popularSearches}>
-                        <div className={styles.popularTitle}>what people are searching for :</div>
-                        <div className={styles.popularTags}>
-                          {["chest pain", "cancer", "surgery", "liver"].map((tag) => (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={() => setSearchQuery(tag)}
-                              className={styles.popularTagBtn}
-                            >
-                              {tag}
-                            </button>
-                          ))}
+                      {/* Merged Searches (Recent & Popular inline) */}
+                      <div className={styles.popularSearches} style={{ flexDirection: "column", alignItems: "flex-start", gap: "8px" }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px", width: "100%" }}>
+                          
+                          {/* Recent Tags Section */}
+                          {recentSearches.length > 0 && (
+                            <>
+                              <span className={styles.popularTitle} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                Recent:
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setRecentSearches([]);
+                                    sessionStorage.removeItem("nh_recent_searches");
+                                  }}
+                                  style={{
+                                    background: "none", border: "none", padding: 0, fontSize: "9px",
+                                    color: "#9ca3af", cursor: "pointer", textDecoration: "underline", fontWeight: 500, marginLeft: "4px"
+                                  }}
+                                >
+                                  (clear)
+                                </button>
+                              </span>
+                              <div className={styles.popularTags} style={{ display: "inline-flex", marginRight: "16px" }}>
+                                {recentSearches.map((tag) => (
+                                  <button
+                                    key={tag}
+                                    type="button"
+                                    onClick={() => {
+                                      setSearchQuery(tag);
+                                      setHasSubmittedQuery(true);
+                                    }}
+                                    className={styles.popularTagBtn}
+                                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "4px 10px" }}
+                                  >
+                                    <Clock size={10} color="#9ca3af" />
+                                    {tag}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          {/* Popular Tags Section */}
+                          <span className={styles.popularTitle}>Trending:</span>
+                          <div className={styles.popularTags} style={{ display: "inline-flex" }}>
+                            {["chest pain", "cancer", "surgery", "liver"].map((tag) => (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => {
+                                  setSearchQuery(tag);
+                                  setHasSubmittedQuery(true);
+                                }}
+                                className={styles.popularTagBtn}
+                              >
+                                {tag}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
 
@@ -1196,7 +1272,7 @@ export default function HeroSearchFirst() {
                         <div 
                           className={`${styles.entryCard} ${styles.blueThemeCard}`}
                           onClick={() => {
-                            setSearchQuery("Find doctor");
+                            setSearchQuery("");
                             setIsPulseActive(true);
                           }}
                           style={{ cursor: "pointer" }}
@@ -1204,7 +1280,7 @@ export default function HeroSearchFirst() {
                           <div className={styles.entryCardHeader}>
                             <div className={styles.entryCardBannerWrap}>
                               <img 
-                                src="/pulse_find_doctor_banner.png" 
+                                src="/images/pulse-ai/pulse_find_doctor_banner.png" 
                                 alt="Find the right doctor" 
                                 className={styles.entryCardBannerImg} 
                               />
@@ -1230,7 +1306,7 @@ export default function HeroSearchFirst() {
                           <div className={styles.entryCardHeader}>
                             <div className={styles.entryCardBannerWrap}>
                               <img 
-                                src="/pulse_health_insights_banner.png" 
+                                src="/images/pulse-ai/pulse_health_insights_banner.png" 
                                 alt="Know your health" 
                                 className={styles.entryCardBannerImg} 
                               />
@@ -1257,11 +1333,11 @@ export default function HeroSearchFirst() {
                               <div className={styles.dropdownTabContent} style={{ maxHeight: "200px" }}>
                                 <div className={styles.dropdownSection}>
                                   {/* Speciality matched if any */}
-                                  {displaySpecs.length > 0 && (
+                                  {filteredSpecs.length > 0 && (
                                     <div style={{ marginBottom: "12px" }}>
                                       <div className={styles.sectionHeader} style={{ fontSize: "11px", marginBottom: "6px" }}>Specialities</div>
                                       <div className={styles.specGrid} style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
-                                        {displaySpecs.map((spec) => (
+                                        {filteredSpecs.map((spec) => (
                                           <div
                                             key={spec.name}
                                             onClick={() => handleSelectSuggestion(spec.name)}
@@ -1284,20 +1360,20 @@ export default function HeroSearchFirst() {
                                   )}
 
                                    {(() => {
-                                     const hospitalDoctors = displayDoctors.filter(doc => {
+                                     const hospitalDoctors = filteredDoctors.filter(doc => {
                                        if (simulatedUserLocation === "far_away") return false;
                                        return doc.consultationModes === "hospital" || doc.consultationModes === "both" || !doc.consultationModes;
                                      });
 
-                                     const videoDoctors = displayDoctors.filter(doc => {
+                                     const videoDoctors = filteredDoctors.filter(doc => {
                                        if (simulatedUserLocation === "far_away") {
                                          return doc.consultationModes === "video" || doc.consultationModes === "both" || !doc.consultationModes;
                                        }
                                        return doc.consultationModes === "video";
                                      });
 
-                                     if (displayDoctors.length === 0) {
-                                       return displaySpecs.length === 0 ? (
+                                     if (filteredDoctors.length === 0) {
+                                       return filteredSpecs.length === 0 ? (
                                          <div className={styles.noResults} style={{ padding: "8px 0" }}>No direct general results found</div>
                                        ) : null;
                                      }
@@ -1307,8 +1383,8 @@ export default function HeroSearchFirst() {
                                          {hospitalDoctors.length > 0 && (
                                            <div>
                                              <div className={styles.sectionHeader} style={{ fontSize: "11px", marginBottom: "6px", color: "#16a34a", display: "flex", alignItems: "center", gap: "4px" }}>
-                                               <Building2 size={12} /> Hospital Visit (In-Person)
-                                             </div>
+                                <Building2 size={12} /> Hospital Visit (In-Person){simulatedUserLocation === "nearby" && <span style={{ color: "#f97316", fontWeight: 600, marginLeft: "4px" }}>· Nearest city</span>}
+                              </div>
                                              <div className={styles.doctorGrid} style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "8px" }}>
                                                {hospitalDoctors.map((doc) => (
                                                  <div
@@ -1318,7 +1394,7 @@ export default function HeroSearchFirst() {
                                                    style={{ padding: "8px 10px" }}
                                                  >
                                                    <img
-                                                     src={doc.photo || "/doctor_avatar_male.png"}
+                                                     src={doc.photo || "/images/misc/doctor_avatar_male.png"}
                                                      alt={doc.name}
                                                      className={styles.doctorPhoto}
                                                      style={{ width: "32px", height: "32px" }}
@@ -1351,8 +1427,8 @@ export default function HeroSearchFirst() {
                                          {videoDoctors.length > 0 && (
                                            <div>
                                              <div className={styles.sectionHeader} style={{ fontSize: "11px", marginBottom: "6px", color: "#7c3aed", display: "flex", alignItems: "center", gap: "4px" }}>
-                                               <Video size={12} /> Video Consultation (Online)
-                                             </div>
+                                <Video size={12} /> Video Consultation (Online){simulatedUserLocation === "far_away" && <span style={{ color: "#7c3aed", fontWeight: 600, marginLeft: "4px" }}>· Available everywhere</span>}
+                              </div>
                                              <div className={styles.doctorGrid} style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "8px" }}>
                                                {videoDoctors.map((doc) => (
                                                  <div
@@ -1362,7 +1438,7 @@ export default function HeroSearchFirst() {
                                                    style={{ padding: "8px 10px" }}
                                                  >
                                                    <img
-                                                     src={doc.photo || "/doctor_avatar_male.png"}
+                                                     src={doc.photo || "/images/misc/doctor_avatar_male.png"}
                                                      alt={doc.name}
                                                      className={styles.doctorPhoto}
                                                      style={{ width: "32px", height: "32px" }}
@@ -1467,11 +1543,11 @@ export default function HeroSearchFirst() {
                                     <div className={styles.dropdownTabContent} style={{ maxHeight: "200px" }}>
                                       <div className={styles.dropdownSection}>
                                         {/* Speciality matched if any */}
-                                        {displaySpecs.length > 0 && (
+                                        {filteredSpecs.length > 0 && (
                                           <div style={{ marginBottom: "12px" }}>
                                             <div className={styles.sectionHeader} style={{ fontSize: "11px", marginBottom: "6px" }}>Specialities</div>
                                             <div className={styles.specGrid} style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
-                                              {displaySpecs.map((spec) => (
+                                              {filteredSpecs.map((spec) => (
                                                 <div
                                                   key={spec.name}
                                                   onClick={() => handleSelectSuggestion(spec.name)}
@@ -1494,11 +1570,11 @@ export default function HeroSearchFirst() {
                                         )}
 
                                         {/* Doctors matched if any */}
-                                        {displayDoctors.length > 0 ? (
+                                        {filteredDoctors.length > 0 ? (
                                           <div>
                                             <div className={styles.sectionHeader} style={{ fontSize: "11px", marginBottom: "6px" }}>Doctors</div>
                                             <div className={styles.doctorGrid} style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
-                                              {displayDoctors.map((doc) => (
+                                              {filteredDoctors.map((doc) => (
                                                 <div
                                                   key={doc.name}
                                                   onClick={() => handleSelectSuggestion(doc.name)}
@@ -1506,7 +1582,7 @@ export default function HeroSearchFirst() {
                                                   style={{ padding: "8px 10px" }}
                                                 >
                                                   <img
-                                                    src={doc.photo || "/doctor_avatar_male.png"}
+                                                    src={doc.photo || "/images/misc/doctor_avatar_male.png"}
                                                     alt={doc.name}
                                                     className={styles.doctorPhoto}
                                                     style={{ width: "32px", height: "32px" }}
@@ -1541,7 +1617,7 @@ export default function HeroSearchFirst() {
                                             </div>
                                           </div>
                                         ) : (
-                                          displaySpecs.length === 0 && (
+                                          filteredSpecs.length === 0 && (
                                             <div className={styles.noResults} style={{ padding: "8px 0" }}>No direct general results found</div>
                                           )
                                         )}
@@ -1854,7 +1930,7 @@ export default function HeroSearchFirst() {
                               </button>
                             </div>
 
-                            {activeDropdownTab === "doctors_specialities" && (
+                            {activeDropdownTab === "doctors_specialities" && simulatedUserLocation === "same_city" && (
                               <div className={styles.dropdownLocationFilter}>
                                 <MapPin size={14} className={styles.locationPinIcon} />
                                 <select
@@ -1906,7 +1982,7 @@ export default function HeroSearchFirst() {
                                                   className={styles.doctorCard}
                                                 >
                                                   <img
-                                                    src={doc.photo || "/doctor_avatar_male.png"}
+                                                    src={doc.photo || "/images/misc/doctor_avatar_male.png"}
                                                     alt={doc.name}
                                                     className={styles.doctorPhoto}
                                                   />
@@ -1936,6 +2012,11 @@ export default function HeroSearchFirst() {
                                                         )}
                                                       </span>
                                                     </div>
+                                                    {doc.nextAvailable && (
+                                                      <div className={styles.availabilityChip}>
+                                                        <Calendar size={10} /> Next slot: {doc.nextAvailable}
+                                                      </div>
+                                                    )}
                                                   </div>
                                                 </div>
                                               ))}
@@ -1956,7 +2037,7 @@ export default function HeroSearchFirst() {
                                                   className={styles.doctorCard}
                                                 >
                                                   <img
-                                                    src={doc.photo || "/doctor_avatar_male.png"}
+                                                    src={doc.photo || "/images/misc/doctor_avatar_male.png"}
                                                     alt={doc.name}
                                                     className={styles.doctorPhoto}
                                                   />
@@ -1987,6 +2068,11 @@ export default function HeroSearchFirst() {
                                                         )}
                                                       </span>
                                                     </div>
+                                                    {doc.nextAvailable && (
+                                                      <div className={styles.availabilityChip} style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe" }}>
+                                                        <Video size={10} /> Next slot: {doc.nextAvailable}
+                                                      </div>
+                                                    )}
                                                   </div>
                                                 </div>
                                               ))}
@@ -2212,64 +2298,166 @@ export default function HeroSearchFirst() {
                     </AnimatePresence>
                   </motion.form>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={isOpen ? { opacity: 0, y: 20, pointerEvents: "none" } : { opacity: 1, y: 0, pointerEvents: "auto" }}
-            transition={{ duration: 0.6, delay: isOpen ? 0 : 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className={styles.metricsRow}
-          >
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-              className={styles.metricItem}
-            >
-              <div className={styles.metricValue}><CountingNumber value={5000} suffix="+" /></div>
-              <div className={styles.metricLabel}>Robotic Surgeries<br/>Performed</div>
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
-              className={styles.metricItem}
-            >
-              <div className={styles.metricValue}><CountingNumber value={550000} suffix="+" /></div>
-              <div className={styles.metricLabel}>Cardiac Consults<br/>Annually</div>
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }}
-              className={styles.metricItem}
-            >
-              <div className={styles.metricValue}><CountingNumber value={33000} suffix="+" /></div>
-              <div className={styles.metricLabel}>Image Guided<br/>Procedures</div>
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
-              className={styles.metricItem}
-            >
-              <div className={styles.metricValue}><CountingNumber value={8000} suffix="+" /></div>
-              <div className={styles.metricLabel}>Solid Organ<br/>Transplants</div>
-            </motion.div>
-          </motion.div>
+
 
         </div>
       </div>
-      {isPulseActive && (
-        <PulseAIWorkspace 
-          initialQuery={pulseInitialAction ? "" : searchQuery}
-          initialAction={pulseInitialAction}
-          initialActionData={pulseInitialActionData}
-          onClose={() => {
-            setIsPulseActive(false);
-            setPulseInitialAction(null);
-            setPulseInitialActionData(null);
-          }} 
-        />
+
+      <div className={styles.pulseShellAnchor}>
+        <div className={styles.pulseShell}>
+          <div className={styles.pulseInner}>
+            <div className={styles.pulseCenterUnit}>
+              <div
+                className={`${styles.logoGlow} ${prefersReducedMotion ? styles.logoGlowStatic : ""}`}
+                aria-hidden
+              />
+              <div className={styles.pulseLogoUnit}>
+                <img src="/images/pulse-ai/pulse-ai.png" alt="Pulse AI" className={styles.pulseLogoImg} />
+              </div>
+              <div className={styles.pulseTextUnit}>
+                <div className={styles.pulseTitle}>Ask Pulse AI</div>
+                <p className={styles.pulseDescription}>Describe your symptoms, or ask a question..</p>
+                <p className={styles.pulseVersion}>v1.0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      <AnimatePresence>
+        {mounted && isPulseActive && typeof document !== "undefined" && createPortal(
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ position: "fixed", inset: 0, zIndex: 99999, pointerEvents: "auto" }}
+          >
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ position: "absolute", inset: 0, background: "rgba(11, 15, 25, 0.5)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }} 
+            />
+            <PixelRipple trigger={showPixelRipple} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column" }}>
+              <PulseAIWorkspace 
+                initialQuery={pulseInitialAction ? "" : searchQuery}
+                initialAction={pulseInitialAction}
+                initialActionData={pulseInitialActionData}
+                onClose={() => {
+                  setIsPulseActive(false);
+                  setPulseInitialAction(null);
+                  setPulseInitialActionData(null);
+                }}
+              />
+            </div>
+          </motion.div>,
+          document.body
+        )}
+      </AnimatePresence>
+
+      {/* Floating Gear Button & Panel */}
+      {mounted && (
+        <div style={{ position: "fixed", right: "24px", top: "50%", transform: "translateY(-50%)", zIndex: 99999, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "12px" }}>
+          <button
+            type="button"
+            onClick={() => setShowDemoSettings(!showDemoSettings)}
+            style={{
+              background: "rgba(255, 255, 255, 0.15)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              border: "1px solid rgba(255, 255, 255, 0.25)",
+              borderRadius: "50%",
+              width: "48px",
+              height: "48px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "rgba(255, 255, 255, 0.8)",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.25)",
+              transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.25)";
+              e.currentTarget.style.color = "#ffffff";
+              e.currentTarget.style.transform = "scale(1.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.15)";
+              e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            <Settings size={24} style={{ transform: showDemoSettings ? "rotate(90deg)" : "none", transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)" }} />
+          </button>
+
+          <AnimatePresence>
+            {showDemoSettings && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                style={{
+                  background: "rgba(15, 23, 42, 0.95)",
+                  backdropFilter: "blur(16px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "16px",
+                  padding: "16px",
+                  width: "240px",
+                  boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                  color: "#ffffff"
+                }}
+              >
+                <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "#94a3b8" }}>
+                  Scenario Control
+                </div>
+                <div style={{ height: "1px", background: "rgba(255, 255, 255, 0.1)" }} />
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {[
+                    { id: "same_city", label: "Same City", desc: "Local clinics & visits", color: "#10b981" },
+                    { id: "nearby", label: "Nearby (100km)", desc: "Simulate nearest city", color: "#f97316" },
+                    { id: "far_away", label: "Far Away (Video)", desc: "Online video consults only", color: "#8b5cf6" }
+                  ].map((scen) => {
+                    const active = simulatedUserLocation === scen.id;
+                    return (
+                      <button
+                        key={scen.id}
+                        type="button"
+                        onClick={() => setSimulatedUserLocation(scen.id as any)}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "8px 12px",
+                          borderRadius: "10px",
+                          background: active ? "rgba(255, 255, 255, 0.12)" : "transparent",
+                          border: active ? `1px solid ${scen.color}` : "1px solid transparent",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                          outline: "none"
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: scen.color }} />
+                          <span style={{ fontSize: "12px", fontWeight: 700, color: active ? "#ffffff" : "#cbd5e1" }}>{scen.label}</span>
+                        </div>
+                        <div style={{ fontSize: "10px", color: "#64748b", marginLeft: "16px", marginTop: "2px" }}>{scen.desc}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
-    </section>
+      </motion.section>
+    </div>
   );
 }

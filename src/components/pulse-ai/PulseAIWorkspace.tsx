@@ -1455,66 +1455,387 @@ function OrganCard({ organ, onViewFindings, onConsult }: {
   );
 }
 
-/* ─── HEALTH ORGANS PANEL (sidebar + detail two-column) ─────── */
+/* ─── HEALTH ORGANS PANEL (Interactive Human Body) ─────── */
+/* ─── HEALTH ORGANS PANEL (Interactive Human Body) ─────── */
 function HealthOrgansPanel({
-  onViewFindings, onConsult, userName = "Omkar"
+  onViewFindings, onConsult, userName = "Omkar", gender = "male"
 }: {
   onViewFindings: (o: OrganHealth) => void;
   onConsult: () => void;
   userName?: string;
+  gender?: string;
 }) {
-  const [selectedId, setSelectedId] = useState("brain");
-  const organ = ORGAN_HEALTH.find(o => o.id === selectedId) ?? ORGAN_HEALTH[0];
+  const [selectedOrgan, setSelectedOrgan] = useState("brain");
+  const [digestiveSubState, setDigestiveSubState] = useState("main");
+  const [debugMode, setDebugMode] = useState(false);
+
+  // Bounding box refs for SVG line drawing
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapWrapRef = useRef<HTMLDivElement>(null);
+  const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const hotspotRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  const [laserLine, setLaserLine] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const [ripplePos, setRipplePos] = useState<{ top: number; left: number } | null>(null);
+
+  const organ = ORGAN_HEALTH.find(o => o.id === selectedOrgan) ?? ORGAN_HEALTH[0];
+
+  // Helper to fetch status color dot class
+  const getStatusColorDot = (status: string) => {
+    if (status === "needs_attention") return "#ef4444"; // red
+    if (status === "moderate") return "#f59e0b"; // amber
+    return "#10b981"; // green
+  };
+
+  const getStatusLabel = (status: string) => {
+    if (status === "needs_attention") return "Attention";
+    if (status === "moderate") return "Moderate";
+    return "All good";
+  };
+
+  // Pre-rendered PNG states mapping for Male
+  const getMaleBodyAsset = (organId: string, digestiveSub: string) => {
+    switch (organId) {
+      case "heart": return "/Human body module/M with heart selected.png";
+      case "lungs": return "/Human body module/M with lungs selected.png";
+      case "kidney": return "/Human body module/M with kidney selected.png";
+      case "reproductive": return "/Human body module/M with reporductive selected.png";
+      case "immunity": return "/Human body module/M with immunity selected.png";
+      case "skin": return "/Human body module/M with skin selected.png";
+      case "bones": return "/Human body module/M with bones selected.png";
+      case "endocrine": return "/Human body module/M with harmons selected.png";
+      case "digestive":
+        if (digestiveSub === "1") return "/Human body module/M with digestive 1 selected.png";
+        if (digestiveSub === "2") return "/Human body module/M with digestive 2 selected.png";
+        if (digestiveSub === "3") return "/Human body module/M with digestive 3 selected.png";
+        return "/Human body module/M with digestive main selected.png";
+      case "brain":
+      default:
+        return "/Human body module/Male body with normal organ.png";
+    }
+  };
+
+  // Base assets
+  const isMale = gender === "male";
+  const baseImgSrc = isMale
+    ? getMaleBodyAsset(selectedOrgan, digestiveSubState)
+    : "/Human body module/Female normal body.png";
+
+  // Individual overlays (primarily for Female body layer fallback, or Male brain selected highlight)
+  const getOverlayAsset = (organId: string) => {
+    if (organId === "brain") return "/Human body module/Brain Normal.png";
+    if (isMale) return null; // Male uses pre-rendered states directly, no separate overlays needed
+
+    // Female overlays
+    switch (organId) {
+      case "heart": return "/Human body module/Heart selected.png";
+      case "lungs": return "/Human body module/Lungs Selected.png";
+      case "digestive": return "/Human body module/Intestine Selected.png";
+      case "kidney": return "/Human body module/Kidney selected.png";
+      case "reproductive": return "/Human body module/Female R selected.png";
+      case "endocrine": return "/Human body module/Liver selcted.png";
+      default: return null;
+    }
+  };
+
+  const overlayImgSrc = getOverlayAsset(selectedOrgan);
+
+  // Left Column categories
+  const leftCategories = [
+    { id: "immunity", label: "Immunity" },
+    { id: "skin", label: "Skin" },
+    { id: "bones", label: "Bones" },
+    { id: "endocrine", label: "Hormones" },
+    { id: "reproductive", label: "Reproductive" }
+  ];
+
+  // Right Column categories
+  const rightCategories = [
+    { id: "brain", label: "Brain" },
+    { id: "heart", label: "Heart" },
+    { id: "lungs", label: "Lungs" },
+    { id: "digestive", label: "Digestive" },
+    { id: "kidney", label: "Kidneys" }
+  ];
+
+  const handleOrganSelect = (organId: string, digestiveSub = "main") => {
+    setSelectedOrgan(organId);
+    if (organId === "digestive") {
+      setDigestiveSubState(digestiveSub);
+    }
+  };
+
+  const updateDynamicElements = useCallback(() => {
+    if (!containerRef.current || !mapWrapRef.current) return;
+    const btn = buttonRefs.current[selectedOrgan];
+    const hotKey = selectedOrgan === "digestive" ? `digestive-${digestiveSubState}` : selectedOrgan;
+    const hot = hotspotRefs.current[hotKey];
+
+    if (btn && hot) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const mapRect = mapWrapRef.current.getBoundingClientRect();
+      const btnRect = btn.getBoundingClientRect();
+      const hotRect = hot.getBoundingClientRect();
+
+      const isLeftButton = leftCategories.some(c => c.id === selectedOrgan);
+
+      const x1 = isLeftButton 
+        ? btnRect.right - containerRect.left
+        : btnRect.left - containerRect.left;
+      const y1 = btnRect.top + btnRect.height / 2 - containerRect.top;
+
+      const x2 = hotRect.left + hotRect.width / 2 - containerRect.left;
+      const y2 = hotRect.top + hotRect.height / 2 - containerRect.top;
+
+      setLaserLine({ x1, y1, x2, y2 });
+
+      const rLeft = hotRect.left + hotRect.width / 2 - mapRect.left;
+      const rTop = hotRect.top + hotRect.height / 2 - mapRect.top;
+      setRipplePos({ left: rLeft, top: rTop });
+    } else {
+      setLaserLine(null);
+      setRipplePos(null);
+    }
+  }, [selectedOrgan, digestiveSubState]);
+
+  useEffect(() => {
+    const timer = setTimeout(updateDynamicElements, 120);
+    window.addEventListener("resize", updateDynamicElements);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", updateDynamicElements);
+    };
+  }, [updateDynamicElements]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 0, width: "100%", marginTop: "12px" }}>
-      {/* ── Organ selector label ── */}
-      <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "12px" }}>
-        Select an organ to see its insights
+    <div className={styles.humanBodyModuleLayout}>
+      <div className={styles.debugSwitchContainer}>
+        <button 
+          onClick={() => setDebugMode(!debugMode)} 
+          className={styles.debugToggleBtn}
+        >
+          {debugMode ? "Disable Debug Mode" : "Enable Debug Mode"}
+        </button>
       </div>
 
-      {/* ── Two-column layout ── */}
-      <div className={styles.healthPanelLayout}>
-        {/* Left sidebar */}
-        <div className={styles.organSidebar}>
-          <div className={styles.organSidebarList}>
-            {ORGAN_HEALTH.map(o => {
-              const isActive = selectedId === o.id;
-              const svgSrc   = organIconMap[o.id];
-              const isAttn   = o.status === "needs_attention";
-              const isMod    = o.status === "moderate";
-              return (
-                <button
-                  key={o.id}
-                  className={`${styles.organSidebarItem} ${isActive ? styles.organSidebarItemActive : ""}`}
-                  onClick={() => setSelectedId(o.id)}
-                >
-                  <div className={styles.organSidebarIconWrap}>
-                    {svgSrc
-                      ? <img src={svgSrc} alt={o.name} className={styles.organSidebarSvg} />
-                      : <span style={{ fontSize: 22 }}>{o.emoji}</span>}
-                    <span className={`${styles.organSidebarDot} ${
-                      isAttn ? styles.dotRed : isMod ? styles.dotAmber : styles.dotGreen
-                    }`} />
-                  </div>
-                  <span className={styles.organSidebarLabel}>{o.name.split(" ")[0]}</span>
-                </button>
-              );
-            })}
+      <div className={styles.bodyModuleMain} ref={containerRef}>
+        {/* Dynamic laser connector SVG */}
+        {laserLine && (
+          <svg className={styles.laserSvgContainer}>
+            <path 
+              d={`M ${laserLine.x1} ${laserLine.y1} L ${laserLine.x2} ${laserLine.y2}`} 
+              stroke="rgba(6, 182, 212, 0.35)" 
+              strokeWidth="3"
+              fill="none" 
+              strokeLinecap="round"
+              filter="drop-shadow(0 0 4px rgba(6, 182, 212, 0.8))"
+            />
+            <path 
+              d={`M ${laserLine.x1} ${laserLine.y1} L ${laserLine.x2} ${laserLine.y2}`} 
+              stroke="#06b6d4" 
+              strokeWidth="1.5" 
+              fill="none" 
+              strokeLinecap="round"
+              className={styles.laserPath}
+            />
+          </svg>
+        )}
+
+        {/* Holographic scanner active overlays */}
+        <div className={styles.scanLine} />
+
+        {/* Left Column Buttons */}
+        <div className={styles.columnLeft}>
+          {leftCategories.map(cat => {
+            const catOrgan = ORGAN_HEALTH.find(o => o.id === cat.id);
+            const status = catOrgan?.status || "doing_good";
+            const isActive = selectedOrgan === cat.id;
+
+            return (
+              <button
+                key={cat.id}
+                ref={el => { buttonRefs.current[cat.id] = el; }}
+                onClick={() => handleOrganSelect(cat.id)}
+                className={`${styles.organCategoryButton} ${isActive ? styles.organCategoryButtonActive : ""}`}
+              >
+                <div className={styles.categoryTitleWrap}>
+                  <span className={styles.categoryStatusDot} style={{ background: getStatusColorDot(status), color: getStatusColorDot(status) }} />
+                  <span className={styles.categoryTitle}>{cat.label}</span>
+                </div>
+                <span className={styles.categoryStatusLabel}>{getStatusLabel(status)}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Center Column: Human Body */}
+        <div className={styles.columnCenter}>
+          <div className={styles.bodyMapWrap} ref={mapWrapRef}>
+            <img 
+              src={baseImgSrc} 
+              alt={`${gender} human body`} 
+              className={styles.bodyBaseImage} 
+            />
+            
+            {overlayImgSrc && (
+              <motion.img 
+                key={overlayImgSrc}
+                src={overlayImgSrc}
+                alt={`${selectedOrgan} highlight`}
+                className={selectedOrgan === "brain" ? styles.brainOverlay : styles.bodyBaseImage}
+                style={selectedOrgan === "brain" ? {} : { position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", pointerEvents: "none" }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              />
+            )}
+
+            {/* Radar Ripple */}
+            {ripplePos && (
+              <div 
+                key={selectedOrgan + digestiveSubState}
+                className={styles.radarRipple}
+                style={{ top: `${ripplePos.top}px`, left: `${ripplePos.left}px` }}
+              />
+            )}
+
+            {/* Hotspots */}
+            <button 
+              ref={el => { hotspotRefs.current["brain"] = el; }}
+              className={`${styles.bodyHotspot} ${debugMode ? `${styles.bodyHotspotDebug} ${selectedOrgan === "brain" ? styles.bodyHotspotDebugActive : ""}` : ""}`}
+              style={{ top: "6%", left: "42%", width: "16%", height: "10%" }}
+              onClick={() => handleOrganSelect("brain")}
+              aria-label="Brain"
+            >
+              {debugMode && "Brain"}
+            </button>
+
+            <button 
+              ref={el => { hotspotRefs.current["lungs"] = el; }}
+              className={`${styles.bodyHotspot} ${debugMode ? `${styles.bodyHotspotDebug} ${selectedOrgan === "lungs" ? styles.bodyHotspotDebugActive : ""}` : ""}`}
+              style={{ top: "26%", left: "35%", width: "30%", height: "12%" }}
+              onClick={() => handleOrganSelect("lungs")}
+              aria-label="Lungs"
+            >
+              {debugMode && "Lungs"}
+            </button>
+
+            <button 
+              ref={el => { hotspotRefs.current["heart"] = el; }}
+              className={`${styles.bodyHotspot} ${debugMode ? `${styles.bodyHotspotDebug} ${selectedOrgan === "heart" ? styles.bodyHotspotDebugActive : ""}` : ""}`}
+              style={{ top: "26%", left: "50%", width: "14%", height: "10%" }}
+              onClick={() => handleOrganSelect("heart")}
+              aria-label="Heart"
+            >
+              {debugMode && "Heart"}
+            </button>
+
+            {/* Stomach / Upper Digestive (Digestive 1) */}
+            <button 
+              ref={el => { hotspotRefs.current["digestive-1"] = el; }}
+              className={`${styles.bodyHotspot} ${debugMode ? `${styles.bodyHotspotDebug} ${selectedOrgan === "digestive" && digestiveSubState === "1" ? styles.bodyHotspotDebugActive : ""}` : ""}`}
+              style={{ top: "35%", left: "42%", width: "16%", height: "9%" }}
+              onClick={() => handleOrganSelect("digestive", "1")}
+              aria-label="Stomach"
+            >
+              {debugMode && "Stomach"}
+            </button>
+
+            {/* Liver / Gallbladder (Digestive 2) */}
+            <button 
+              ref={el => { hotspotRefs.current["digestive-2"] = el; }}
+              className={`${styles.bodyHotspot} ${debugMode ? `${styles.bodyHotspotDebug} ${selectedOrgan === "digestive" && digestiveSubState === "2" ? styles.bodyHotspotDebugActive : ""}` : ""}`}
+              style={{ top: "35%", left: "58%", width: "16%", height: "9%" }}
+              onClick={() => handleOrganSelect("digestive", "2")}
+              aria-label="Liver"
+            >
+              {debugMode && "Liver"}
+            </button>
+
+            {/* Intestines (Digestive 3) */}
+            <button 
+              ref={el => { hotspotRefs.current["digestive-3"] = el; }}
+              className={`${styles.bodyHotspot} ${debugMode ? `${styles.bodyHotspotDebug} ${selectedOrgan === "digestive" && digestiveSubState === "3" ? styles.bodyHotspotDebugActive : ""}` : ""}`}
+              style={{ top: "45%", left: "42%", width: "26%", height: "12%" }}
+              onClick={() => handleOrganSelect("digestive", "3")}
+              aria-label="Intestines"
+            >
+              {debugMode && "Intestines"}
+            </button>
+
+            <button 
+              ref={el => { hotspotRefs.current["kidney"] = el; }}
+              className={`${styles.bodyHotspot} ${debugMode ? `${styles.bodyHotspotDebug} ${selectedOrgan === "kidney" ? styles.bodyHotspotDebugActive : ""}` : ""}`}
+              style={{ top: "43%", left: "42%", width: "16%", height: "10%" }}
+              onClick={() => handleOrganSelect("kidney")}
+              aria-label="Kidneys"
+            >
+              {debugMode && "Kidneys"}
+            </button>
+
+            <button 
+              ref={el => { hotspotRefs.current["reproductive"] = el; }}
+              className={`${styles.bodyHotspot} ${debugMode ? `${styles.bodyHotspotDebug} ${selectedOrgan === "reproductive" ? styles.bodyHotspotDebugActive : ""}` : ""}`}
+              style={{ top: "56%", left: "45%", width: "10%", height: "10%" }}
+              onClick={() => handleOrganSelect("reproductive")}
+              aria-label="Reproductive System"
+            >
+              {debugMode && "Repro"}
+            </button>
+
+            <button 
+              ref={el => { hotspotRefs.current["bones"] = el; }}
+              className={`${styles.bodyHotspot} ${debugMode ? `${styles.bodyHotspotDebug} ${selectedOrgan === "bones" ? styles.bodyHotspotDebugActive : ""}` : ""}`}
+              style={{ top: "65%", left: "40%", width: "20%", height: "20%" }}
+              onClick={() => handleOrganSelect("bones")}
+              aria-label="Bones & Joints"
+            >
+              {debugMode && "Bones"}
+            </button>
           </div>
         </div>
 
-        {/* Right detail card */}
-        <div className={styles.organDetailPanel}>
-          <motion.div
-            key={selectedId}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <OrganCard organ={organ} onViewFindings={onViewFindings} onConsult={onConsult} />
-          </motion.div>
+        {/* Right Column Buttons */}
+        <div className={styles.columnRight}>
+          {rightCategories.map(cat => {
+            const catOrgan = ORGAN_HEALTH.find(o => o.id === cat.id);
+            const status = catOrgan?.status || "doing_good";
+            const isActive = selectedOrgan === cat.id;
+
+            return (
+              <button
+                key={cat.id}
+                ref={el => { buttonRefs.current[cat.id] = el; }}
+                onClick={() => handleOrganSelect(cat.id)}
+                className={`${styles.organCategoryButton} ${isActive ? styles.organCategoryButtonActive : ""}`}
+              >
+                <div className={styles.categoryTitleWrap}>
+                  <span className={styles.categoryStatusDot} style={{ background: getStatusColorDot(status), color: getStatusColorDot(status) }} />
+                  <span className={styles.categoryTitle}>{cat.label}</span>
+                </div>
+                <span className={styles.categoryStatusLabel}>{getStatusLabel(status)}</span>
+              </button>
+            );
+          })}
         </div>
+      </div>
+
+      {/* Bottom Column: Health Assessment Card */}
+      <div className={styles.assessmentCardArea}>
+        <motion.div
+          key={selectedOrgan + digestiveSubState}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 12 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+        >
+          <OrganCard 
+            organ={organ} 
+            onViewFindings={onViewFindings} 
+            onConsult={onConsult} 
+          />
+        </motion.div>
       </div>
     </div>
   );
@@ -2743,13 +3064,14 @@ function InlineOTPInput({ phone, onAction }: { phone: string; onAction: (type: s
 }
 
 /* ─── MESSAGE BUBBLE ──────────────────────────────────────── */
-function MsgBubble({ msg, onAction, onPrefill, activeChipId, userName = "Omkar", tutorialStep }: {
+function MsgBubble({ msg, onAction, onPrefill, activeChipId, userName = "Omkar", tutorialStep, gender = "male" }: {
   msg: Message;
   onAction: (type: string, data?: unknown) => void;
   onPrefill?: (prefix: string, chipId: string) => void;
   activeChipId?: string | null;
   userName?: string;
   tutorialStep?: string;
+  gender?: string;
 }) {
   const wordCount = msg.text ? msg.text.split(/\s+/).filter(w => w.length > 0).length : 0;
   const revealDelay = Math.max(0.6, wordCount * 0.025 + 0.3);
@@ -3251,6 +3573,7 @@ function MsgBubble({ msg, onAction, onPrefill, activeChipId, userName = "Omkar",
               onViewFindings={organ => onAction("view_organ_detail", organ)}
               onConsult={() => onAction("consult")}
               userName={userName}
+              gender={gender}
             />
           </motion.div>
         )}
@@ -3368,37 +3691,88 @@ const welcomeCardVariants = {
   },
 };
 
+function MagicalText({ text, delay = 0, speed = 0.02 }: { text: string; delay?: number; speed?: number }) {
+  const words = text.split(" ");
+  return (
+    <span style={{ display: "inline-block" }}>
+      {words.map((word, wordIndex) => (
+        <span key={wordIndex} style={{ display: "inline-block", marginRight: "0.25em", whiteSpace: "nowrap" }}>
+          {Array.from(word).map((char, charIndex) => {
+            const index = words.slice(0, wordIndex).join("").length + wordIndex + charIndex;
+            return (
+              <motion.span
+                key={charIndex}
+                initial={{ opacity: 0, filter: "blur(3px)", y: 1 }}
+                animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                transition={{
+                  duration: 0.2,
+                  delay: delay + index * speed,
+                  ease: "easeOut"
+                }}
+                style={{ display: "inline-block" }}
+              >
+                {char}
+              </motion.span>
+            );
+          })}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function WelcomeScreen({ onPrompt, onPrefill, activeChipId, isLoggedIn, userName = "Omkar V" }: { onPrompt: (p: string) => void; onPrefill: (prefix: string, chipId: string) => void; activeChipId: string | null; isLoggedIn: boolean; userName?: string }) {
+  const [startMagicalText, setStartMagicalText] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setStartMagicalText(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className={styles.pulseNewLandingContainer}>
+
       {/* 1. Sparkle Animated AI Icon & Greeting */}
-      <motion.div 
-        className={styles.landingHeroSection}
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className={styles.sparkleIconContainer} style={{ width: "94px", height: "94px" }}>
-          <div className={styles.sparkleIconGlow} style={{ inset: "-12px" }} />
+      <div className={styles.landingHeroSection}>
+        <motion.div 
+          className={`${styles.sparkleIconContainer} ${styles.shimmerSheen}`} 
+          style={{ width: "94px", height: "94px" }}
+          initial={{ opacity: 0, scale: 0.6, y: -12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.5, type: "spring", stiffness: 120 }}
+        >
           <div style={{ zIndex: 2 }}>
             <LottieAnimation animationPath="/Logo/AI Searching 2.json" width={94} height={94} />
           </div>
-        </div>
+        </motion.div>
 
-        <h1 className={styles.greetingTitle}>
+        <motion.h1 
+          className={`${styles.greetingTitle} ${styles.disclosureShimmerText}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.9 }}
+        >
           {isLoggedIn ? `Hi ${userName}` : "Hi there!"} <span className={styles.wavingHand}>👋</span>
-        </h1>
-        <p className={styles.greetingSubtitle}>How can I help you today?</p>
-      </motion.div>
+        </motion.h1>
+
+        <motion.p 
+          className={styles.greetingSubtitle}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.1 }}
+        >
+          How can I help you today?
+        </motion.p>
+      </div>
 
       {/* 2. Main Entry Point Cards Container */}
       <div className={styles.entryCardsContainer}>
         {/* Card 1: Find the right doctor (Blue theme) */}
         <motion.div 
           className={`${styles.entryCard} ${styles.blueThemeCard}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
+          variants={welcomeCardVariants}
+          initial="hidden"
+          animate="visible"
           whileHover={{ y: -6, scale: 1.015, boxShadow: "0 14px 34px rgba(0, 0, 0, 0.08)" }}
           whileTap={{ scale: 0.995 }}
           onClick={() => onPrompt("Find doctor")}
@@ -3413,8 +3787,20 @@ function WelcomeScreen({ onPrompt, onPrefill, activeChipId, isLoggedIn, userName
               />
             </div>
             <div className={styles.entryCardMeta}>
-              <h3 className={styles.entryCardTitle}>Find the right doctor</h3>
-              <p className={styles.entryCardSubtitle}>Book the consultation you need</p>
+              <h3 className={styles.entryCardTitle}>
+                {startMagicalText ? (
+                  <MagicalText text="Find the right doctor" delay={0} />
+                ) : (
+                  <span style={{ opacity: 0 }}>Find the right doctor</span>
+                )}
+              </h3>
+              <p className={styles.entryCardSubtitle}>
+                {startMagicalText ? (
+                  <MagicalText text="Book the consultation you need" delay={0.2} speed={0.015} />
+                ) : (
+                  <span style={{ opacity: 0 }}>Book the consultation you need</span>
+                )}
+              </p>
             </div>
             <div className={styles.entryCardChevronBtn}>
               <ChevronRight size={18} />
@@ -3443,9 +3829,10 @@ function WelcomeScreen({ onPrompt, onPrefill, activeChipId, isLoggedIn, userName
         {/* Card 2: Know your health (Mint/Teal theme) */}
         <motion.div 
           className={`${styles.entryCard} ${styles.tealThemeCard}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
+          variants={welcomeCardVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ type: "spring", stiffness: 220, damping: 18, mass: 0.8, delay: 0.15 }}
           whileHover={{ y: -6, scale: 1.015, boxShadow: "0 14px 34px rgba(0, 0, 0, 0.08)" }}
           whileTap={{ scale: 0.995 }}
           onClick={() => onPrompt("Know your health")}
@@ -3460,8 +3847,20 @@ function WelcomeScreen({ onPrompt, onPrefill, activeChipId, isLoggedIn, userName
               />
             </div>
             <div className={styles.entryCardMeta}>
-              <h3 className={styles.entryCardTitle}>Know your health</h3>
-              <p className={styles.entryCardSubtitle}>Get insights from medical history</p>
+              <h3 className={styles.entryCardTitle}>
+                {startMagicalText ? (
+                  <MagicalText text="Know your health" delay={0.6} />
+                ) : (
+                  <span style={{ opacity: 0 }}>Know your health</span>
+                )}
+              </h3>
+              <p className={styles.entryCardSubtitle}>
+                {startMagicalText ? (
+                  <MagicalText text="Get insights from medical history" delay={0.8} speed={0.015} />
+                ) : (
+                  <span style={{ opacity: 0 }}>Get insights from medical history</span>
+                )}
+              </p>
             </div>
             <div className={styles.entryCardChevronBtn}>
               <ChevronRight size={18} />
@@ -3585,10 +3984,10 @@ function Sidebar({ history, activeId, onSelect, onNew, onClose }: {
 
 
 const ASSOCIATED_PROFILES = [
-  { id: "p1", name: "Omkar V", relation: "Self", avatar: "/patient_omkar.png" },
-  { id: "p2", name: "Ramesh V", relation: "Father", avatar: "/assets/doctor_1.png" },
-  { id: "p3", name: "Saraswathi V", relation: "Mother", avatar: "/assets/doctor_2.png" },
-  { id: "p4", name: "Ananya V", relation: "Daughter", avatar: "/assets/doctor_2.png" }
+  { id: "p1", name: "Omkar V", relation: "Self", avatar: "/patient_omkar.png", gender: "male" },
+  { id: "p2", name: "Ramesh V", relation: "Father", avatar: "/assets/doctor_1.png", gender: "male" },
+  { id: "p3", name: "Saraswathi V", relation: "Mother", avatar: "/assets/doctor_2.png", gender: "female" },
+  { id: "p4", name: "Ananya V", relation: "Daughter", avatar: "/assets/doctor_2.png", gender: "female" }
 ];
 
 /* ─── ANIMATED PLACEHOLDER COMPONENT ─────────────────────── */
@@ -4380,21 +4779,6 @@ function Workspace({
           </div>
         </div>
 
-        {showDisclaimer && (
-          <div className={styles.disclaimerBar}>
-            <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <AlertCircle size={13} style={{ color: "#b45309", flexShrink: 0 }} />
-                <span>
-                  Pulse AI is a support assistant to guide your health journey. For any diagnosis, treatment, or medical decisions, please always seek final clinical advice from a licensed physician.
-                </span>
-              </div>
-              <button onClick={() => setShowDisclaimer(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#b45309", display: "flex", alignItems: "center", justifyContent: "center", padding: "2px", marginLeft: "12px", flexShrink: 0 }} aria-label="Close disclaimer">
-                <X size={14} />
-              </button>
-            </div>
-          </div>
-        )}
 
         <div className={styles.chatMessages} ref={chatRef} data-lenis-prevent>
           <div ref={topMenuRef} id="pulse-main-menu-top" style={{ display: "flex", flexDirection: "column", width: "100%", justifyContent: "center", alignItems: "center" }}>
@@ -4406,7 +4790,7 @@ function Workspace({
           {msgs.length > 0 && (
             <div className={styles.msgList} style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px dashed rgba(139, 92, 246, 0.2)" }}>
               {msgs.map(m => (
-                <MsgBubble key={m.id} msg={m} onAction={handleAction} onPrefill={handlePrefillPrompt} activeChipId={activeChipId} userName={activeProfile.name} tutorialStep={tutorialStep} />
+                <MsgBubble key={m.id} msg={m} onAction={handleAction} onPrefill={handlePrefillPrompt} activeChipId={activeChipId} userName={activeProfile.name} tutorialStep={tutorialStep} gender={activeProfile.gender || "male"} />
               ))}
             </div>
           )}
@@ -4505,6 +4889,9 @@ function Workspace({
                 </button>
               )}
             </div>
+          </div>
+          <div className={styles.inputDisclaimer}>
+            Pulse ai can make mistake. Check important information.
           </div>
         </div>
 
@@ -5173,13 +5560,17 @@ export default function PulseAIWorkspace({
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
             <div className={styles.overlayBg} onClick={handleClose} />
             <motion.div className={`${styles.workspaceContainer} ${isMaximized ? styles.workspaceContainerMaximized : ""}`}
-              initial={{ opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
               animate={{ 
                 opacity: 1,
-                transition: { duration: 0.4, ease: "easeOut" } 
+                scale: 1,
+                y: 0,
+                transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } 
               }}
               exit={{ 
                 opacity: 0,
+                scale: 0.95,
+                y: 30,
                 transition: { duration: 0.3, ease: "easeIn" } 
               }}
             >

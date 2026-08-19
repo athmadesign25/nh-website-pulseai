@@ -51,3 +51,9 @@
     flex: 1;
   }
 }
+
+@keyframes pulseScanLine {
+  0% { transform: translateY(0); opacity: 0.1; }
+  50% { transform: translateY(115px); opacity: 0.8; }
+  100% { transform: translateY(0); opacity: 0.1; }
+}

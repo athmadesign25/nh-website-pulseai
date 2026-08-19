@@ -37,8 +37,9 @@ export default function PixelRipple({ trigger }: PixelRippleProps) {
     const cy = rows / 2;
 
     const COLORS = [
-      "rgba(59, 130, 246,",  // Blue
-      "rgba(239, 68, 68,"    // Red
+      "rgba(236, 72, 153,",  // Pink (#ec4899)
+      "rgba(139, 92, 246,",  // Purple (#8b5cf6)
+      "rgba(6, 182, 212,"    // Cyan (#06b6d4)
     ];
 
     interface Cell {

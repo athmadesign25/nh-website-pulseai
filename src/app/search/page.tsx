@@ -10,6 +10,9 @@ import {
   Search, X, User, Building2, Activity, ShieldCheck, 
   FileText, Calendar, Star, MapPin, Clock, ArrowRight, ShieldAlert
 } from "lucide-react";
+import { createPortal } from "react-dom";
+import PulseAIWorkspace from "../../components/pulse-ai/PulseAIWorkspace";
+import PixelRipple from "../../components/home/PixelRipple";
 
 // Mock Data
 const doctorsData = [
@@ -89,6 +92,32 @@ const doctorsData = [
     reviews: 430,
     available: "Available Today",
     img: "/assets/doctor_2.png",
+    fee: "₹900",
+  },
+  {
+    id: "dr-7",
+    name: "Dr. Vikram Seth",
+    speciality: "General Medicine",
+    hospital: "NH Bangalore",
+    city: "Bangalore",
+    experience: "10 Years",
+    rating: 4.8,
+    reviews: 950,
+    available: "Available Today",
+    img: "/assets/doctor_avatar_male.png",
+    fee: "₹800",
+  },
+  {
+    id: "dr-8",
+    name: "Dr. Shalini Singh",
+    speciality: "General Medicine",
+    hospital: "NH Mumbai",
+    city: "Mumbai",
+    experience: "14 Years",
+    rating: 4.9,
+    reviews: 1100,
+    available: "Available Today",
+    img: "/assets/doctor_avatar_female.png",
     fee: "₹900",
   },
 ];
@@ -304,6 +333,13 @@ function SearchResultsContent() {
   const [query, setQuery] = useState(initialQuery);
   const [location, setLocation] = useState(initialLocation);
   const [activeTab, setActiveTab] = useState("doctors");
+  const [isPulseActive, setIsPulseActive] = useState(false);
+  const [showPixelRipple, setShowPixelRipple] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync state if URL query changes
   useEffect(() => {
@@ -312,17 +348,60 @@ function SearchResultsContent() {
     setActiveTab("doctors");
   }, [initialQuery, searchParams]);
 
+  // Lock/Unlock body scroll and delay ripple for animation smoothness
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isPulseActive) {
+      document.body.style.overflow = "hidden";
+      timer = setTimeout(() => setShowPixelRipple(true), 300);
+    } else {
+      document.body.style.overflow = "";
+      setShowPixelRipple(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isPulseActive]);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`/search?q=${encodeURIComponent(query.trim())}&location=${encodeURIComponent(location)}`);
+    window.history.pushState(null, "", `/search?q=${encodeURIComponent(query.trim())}&location=${encodeURIComponent(location)}`);
     setActiveTab("doctors");
+  };
+
+  // Simple mapping of symptom/conversational keywords to specialities
+  const getSpecialityFromSymptom = (q: string): string[] => {
+    const queryLower = q.toLowerCase();
+    const matches: string[] = [];
+    if (/heart|cardio|chest\s*pain|bypass|angioplasty|palpitation/i.test(queryLower)) {
+      matches.push("Cardiology");
+    }
+    if (/brain|neuro|stroke|migraine|headache|paralysis/i.test(queryLower)) {
+      matches.push("Neurology");
+    }
+    if (/cancer|tumor|chemo|oncology/i.test(queryLower)) {
+      matches.push("Oncology");
+    }
+    if (/bone|joint|ortho|knee|back\s*pain|fracture/i.test(queryLower)) {
+      matches.push("Orthopaedics");
+    }
+    if (/stomach|liver|acid|gastro|digest/i.test(queryLower)) {
+      matches.push("Gastroenterology");
+    }
+    if (/child|kid|baby|paediatric/i.test(queryLower)) {
+      matches.push("Paediatrics");
+    }
+    if (/fever|cough|cold|flu|infection|headache|weakness/i.test(queryLower)) {
+      matches.push("General Medicine", "Cardiology");
+    }
+    return matches;
   };
 
   // Filter logic for each category
   const filteredDoctors = doctorsData.filter((d) => {
+    const matchedSpecs = getSpecialityFromSymptom(query);
     const matchesQuery = d.name.toLowerCase().includes(query.toLowerCase()) ||
       d.speciality.toLowerCase().includes(query.toLowerCase()) ||
-      d.hospital.toLowerCase().includes(query.toLowerCase());
+      d.hospital.toLowerCase().includes(query.toLowerCase()) ||
+      matchedSpecs.some(spec => d.speciality.toLowerCase() === spec.toLowerCase());
     const matchesLocation = location === "All" || d.city.toLowerCase() === location.toLowerCase();
     return matchesQuery && matchesLocation;
   });
@@ -448,6 +527,93 @@ function SearchResultsContent() {
 
       {/* Tabs and Content Wrapper */}
       <div className="container" style={{ padding: "24px var(--sp-3)", maxWidth: 1024 }}>
+        {/* Pulse AI Recommended Consultation Banner */}
+        {(() => {
+          const isConversational = query.trim().split(" ").length > 1 || 
+                                  /have|fever|cough|tomorrow|symptom|feel|pain|heart|chest|brain|headache|stomach|cold|flu|cancer|joint|bone|appointment/i.test(query.trim());
+          if (!isConversational) return null;
+
+          return (
+            <div 
+              style={{ 
+                background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%)", 
+                borderRadius: "16px", 
+                padding: "24px", 
+                marginBottom: "24px",
+                border: "1px solid rgba(139, 92, 246, 0.25)",
+                boxShadow: "0 10px 30px rgba(139, 92, 246, 0.15)",
+                position: "relative",
+                overflow: "hidden",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "20px"
+              }}
+            >
+              {/* Holographic scanner effect line */}
+              <div 
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: "2px",
+                  background: "linear-gradient(90deg, transparent, #06b6d4, transparent)",
+                  animation: `${styles.pulseScanLine} 4s linear infinite`
+                }} 
+              />
+
+              <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", flex: 1, minWidth: "280px" }}>
+                <div 
+                  style={{ 
+                    background: "rgba(139, 92, 246, 0.15)", 
+                    padding: "12px", 
+                    borderRadius: "12px", 
+                    border: "1px solid rgba(139, 92, 246, 0.3)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  <Activity size={24} style={{ color: "#a78bfa" }} />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "#a78bfa", letterSpacing: "0.05em", textTransform: "uppercase" }}>Pulse AI Recommendation</span>
+                    <span style={{ background: "#06b6d4", color: "#ffffff", fontSize: "9px", fontWeight: 800, padding: "1px 6px", borderRadius: "20px" }}>Symptom Detected</span>
+                  </div>
+                  <h3 style={{ fontSize: "17px", fontWeight: 700, color: "#ffffff", marginTop: "4px" }}>
+                    Personalize Results with Pulse AI for &apos;&apos;{query}&apos;&apos;
+                  </h3>
+                  <p style={{ fontSize: "13px", color: "#cbd5e1", maxWidth: "600px", lineHeight: "1.5", marginTop: "2px" }}>
+                    Analyze symptoms, view interactive organ highlights, and match directly with specialized Narayana clinics.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsPulseActive(true)}
+                style={{
+                  background: "linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "10px",
+                  padding: "12px 22px",
+                  fontSize: "13.5px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 15px rgba(139, 92, 246, 0.4)",
+                  transition: "all 0.2s ease",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                Consult Pulse AI
+              </button>
+            </div>
+          );
+        })()}
+
         {/* Horizontal Navigation Filters */}
         <div className={styles.tabScroll}>
           {TABS.map((tab) => {
@@ -518,44 +684,64 @@ function SearchResultsContent() {
             >
               {/* DOCTORS PANEL */}
               {activeTab === "doctors" && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+                <div className={styles.grid3col}>
                   {filteredDoctors.map((doc) => (
                     <div 
-                      key={doc.id}
+                      key={doc.id} 
                       style={{ 
                         background: "#FFFFFF", 
-                        border: "1px solid #E2E8F0", 
                         borderRadius: 16, 
-                        padding: 16, 
-                        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" 
+                        border: "1px solid #E2E8F0", 
+                        padding: 20, 
+                        display: "flex", 
+                        flexDirection: "column", 
+                        gap: 16,
+                        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)"
                       }}
                     >
-                      <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
-                        <div style={{ position: "relative", width: 64, height: 64, borderRadius: 12, overflow: "hidden", flexShrink: 0, background: "rgba(3,78,162,0.05)" }}>
-                          <Image src={doc.img} alt={doc.name} fill style={{ objectFit: "cover" }} />
+                      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                        <div style={{ position: "relative", width: 56, height: 56, borderRadius: "50%", overflow: "hidden", background: "#F1F5F9" }}>
+                          <img 
+                            src={doc.img} 
+                            alt={doc.name} 
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
                         </div>
                         <div>
                           <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1E293B" }}>{doc.name}</h3>
                           <p style={{ fontSize: 13, color: "var(--color-primary, #034EA2)", fontWeight: 600 }}>{doc.speciality}</p>
-                          <p style={{ fontSize: 12, color: "#64748B", display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-                            <MapPin size={12} /> {doc.hospital} · {doc.city}
-                          </p>
+                          <p style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>{doc.experience} Experience</p>
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: 16, borderTop: "1px solid #F1F5F9", paddingTop: 12, fontSize: 13, color: "#64748B" }}>
-                        <div>Experience: <strong style={{ color: "#1E293B" }}>{doc.experience}</strong></div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 3, color: "#F59E0B" }}>
-                          <Star size={14} fill="currentColor" /> <strong>{doc.rating}</strong> ({doc.reviews})
+
+                      <div style={{ borderTop: "1px solid #F1F5F9", paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#475569" }}>
+                          <MapPin size={12} /> {doc.hospital} · {doc.city}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#475569" }}>
+                          <Clock size={12} /> {doc.available}
                         </div>
                       </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16 }}>
+
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
                         <div>
-                          <div style={{ fontSize: 11, color: "var(--color-success, #10B981)", fontWeight: 600 }}>{doc.available}</div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: "#1E293B" }}>{doc.fee} <span style={{ fontSize: 11, fontWeight: 400, color: "#64748B" }}>consult fee</span></div>
+                          <span style={{ fontSize: 11, color: "#94A3B8", display: "block" }}>Consultation Fee</span>
+                          <span style={{ fontSize: 16, fontWeight: 800, color: "#0F172A" }}>{doc.fee}</span>
                         </div>
-                        <Link href={`/doctors/${doc.id}`} style={{ padding: "8px 16px", background: "var(--color-primary, #034EA2)", color: "#FFFFFF", borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-                          Book Slot
-                        </Link>
+                        <button 
+                          style={{ 
+                            background: "var(--color-primary, #034EA2)", 
+                            color: "#FFFFFF", 
+                            border: "none", 
+                            borderRadius: 8, 
+                            padding: "10px 16px", 
+                            fontSize: 13, 
+                            fontWeight: 700, 
+                            cursor: "pointer" 
+                          }}
+                        >
+                          Book Appointment
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -565,45 +751,57 @@ function SearchResultsContent() {
 
               {/* HOSPITALS PANEL */}
               {activeTab === "hospitals" && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   {filteredHospitals.map((hosp) => (
                     <div 
-                      key={hosp.id}
+                      key={hosp.id} 
                       style={{ 
                         background: "#FFFFFF", 
-                        border: "1px solid #E2E8F0", 
                         borderRadius: 16, 
-                        padding: 20, 
-                        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" 
+                        border: "1px solid #E2E8F0", 
+                        padding: 24, 
+                        display: "flex", 
+                        justifyContent: "space-between", 
+                        alignItems: "center", 
+                        flexWrap: "wrap", 
+                        gap: 16,
+                        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)"
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                        <div>
-                          <span style={{ fontSize: 10, background: "rgba(3,78,162,0.08)", color: "var(--color-primary, #034EA2)", padding: "2px 8px", borderRadius: 4, fontWeight: 700 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 11, background: "rgba(3, 78, 162, 0.08)", color: "var(--color-primary, #034EA2)", padding: "2px 8px", borderRadius: 4, fontWeight: 700 }}>
                             {hosp.type}
                           </span>
-                          <h3 style={{ fontSize: 17, fontWeight: 700, color: "#1E293B", marginTop: 6 }}>{hosp.name}</h3>
+                          <span style={{ fontSize: 12, color: "#64748B" }}>{hosp.beds}</span>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, color: "#F59E0B", fontSize: 14, fontWeight: 700 }}>
-                          <Star size={14} fill="currentColor" /> {hosp.rating}
+                        <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1E293B" }}>{hosp.name}</h3>
+                        <p style={{ fontSize: 13, color: "#64748B" }}><MapPin size={12} style={{ display: "inline", marginRight: 4 }} />{hosp.address}</p>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
+                          {hosp.specs.map((s, idx) => (
+                            <span key={idx} style={{ fontSize: 11, background: "#F1F5F9", color: "#475569", padding: "2px 8px", borderRadius: 4 }}>
+                              {s}
+                            </span>
+                          ))}
                         </div>
                       </div>
-                      <p style={{ fontSize: 13, color: "#64748B", display: "flex", alignItems: "center", gap: 4, marginBottom: 14 }}>
-                        <MapPin size={13} /> {hosp.address}
-                      </p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
-                        {hosp.specs.map(spec => (
-                          <span key={spec} style={{ fontSize: 11, background: "#F1F5F9", color: "#475569", padding: "3px 8px", borderRadius: 6, fontWeight: 500 }}>
-                            {spec}
-                          </span>
-                        ))}
-                      </div>
-                      <div style={{ borderTop: "1px solid #F1F5F9", paddingTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 13, color: "#475569", fontWeight: 600 }}>{hosp.beds}</span>
-                        <Link href="/" style={{ fontSize: 13, color: "var(--color-primary, #034EA2)", fontWeight: 700, display: "flex", alignItems: "center", gap: 4, textDecoration: "none" }}>
-                          View Hospital <ArrowRight size={14} />
-                        </Link>
-                      </div>
+                      <button 
+                        style={{ 
+                          background: "none", 
+                          border: "1.5px solid var(--color-primary, #034EA2)", 
+                          color: "var(--color-primary, #034EA2)", 
+                          borderRadius: 8, 
+                          padding: "12px 20px", 
+                          fontSize: 14, 
+                          fontWeight: 700, 
+                          cursor: "pointer", 
+                          display: "flex", 
+                          alignItems: "center", 
+                          gap: 8 
+                        }}
+                      >
+                        View Hospital <ArrowRight size={14} />
+                      </button>
                     </div>
                   ))}
                   {filteredHospitals.length === 0 && <EmptyState category="hospitals" />}
@@ -612,38 +810,28 @@ function SearchResultsContent() {
 
               {/* TREATMENTS PANEL */}
               {activeTab === "treatments" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div className={styles.grid3col}>
                   {filteredTreatments.map((treat) => (
                     <div 
-                      key={treat.id}
+                      key={treat.id} 
                       style={{ 
                         background: "#FFFFFF", 
-                        border: "1px solid #E2E8F0", 
                         borderRadius: 16, 
+                        border: "1px solid #E2E8F0", 
                         padding: 20, 
-                        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)" 
+                        display: "flex", 
+                        flexDirection: "column", 
+                        gap: 12,
+                        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)"
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                        <div>
-                          <span style={{ fontSize: 10, background: "rgba(220,38,38,0.08)", color: "#DC2626", padding: "2px 8px", borderRadius: 4, fontWeight: 700 }}>
-                            {treat.speciality}
-                          </span>
-                          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1E293B", marginTop: 6 }}>{treat.name}</h3>
-                        </div>
-                        <span style={{ fontSize: 12, color: "#64748B", display: "flex", alignItems: "center", gap: 4 }}>
-                          <Clock size={12} /> {treat.duration}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.6, marginBottom: 16 }}>
-                        {treat.description}
-                      </p>
-                      <div style={{ display: "flex", gap: 12 }}>
-                        <Link href="/doctors" style={{ padding: "8px 16px", background: "var(--color-primary, #034EA2)", color: "#FFFFFF", borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-                          Find Specialists
-                        </Link>
-                        <Link href="/" style={{ padding: "8px 16px", background: "transparent", color: "var(--color-primary, #034EA2)", border: "1px solid var(--color-primary, #034EA2)", borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-                          Learn Treatment Details
+                      <span style={{ fontSize: 11, color: "var(--color-primary, #034EA2)", fontWeight: 700, textTransform: "uppercase" }}>{treat.speciality}</span>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1E293B" }}>{treat.name}</h3>
+                      <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.5, flex: 1 }}>{treat.description}</p>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #F1F5F9", paddingTop: 12, marginTop: 4 }}>
+                        <span style={{ fontSize: 12, color: "#64748B" }}>Duration: {treat.duration}</span>
+                        <Link href={`/specialities/${treat.speciality.toLowerCase()}`} style={{ fontSize: 13, color: "var(--color-primary, #034EA2)", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+                          Learn More <ArrowRight size={12} />
                         </Link>
                       </div>
                     </div>
@@ -779,6 +967,35 @@ function SearchResultsContent() {
           </AnimatePresence>
         </div>
       </div>
+      <AnimatePresence>
+        {mounted && isPulseActive && typeof document !== "undefined" && createPortal(
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ position: "fixed", inset: 0, zIndex: 99999, pointerEvents: "auto" }}
+          >
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ position: "absolute", inset: 0, background: "rgba(11, 15, 25, 0.5)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }} 
+            />
+            <PixelRipple trigger={showPixelRipple} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column" }}>
+              <PulseAIWorkspace 
+                initialQuery={query}
+                onClose={() => {
+                  setIsPulseActive(false);
+                }}
+              />
+            </div>
+          </motion.div>,
+          document.body
+        )}
+      </AnimatePresence>
     </div>
   );
 }

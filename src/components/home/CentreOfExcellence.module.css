@@ -1,27 +1,23 @@
 .section {
   position: relative;
   width: 100%;
-  padding: var(--sp-10) 0;
-  background: radial-gradient(circle at 50% 0%, #0f172a 0%, #090d16 100%);
-  overflow: hidden;
+  background: #ffffff;
+  padding: clamp(160px, 16vw, 220px) 0 0;
 }
+
 
 /* ─── Header ────────────────────────────────────────── */
 .header {
   text-align: center;
   max-width: 800px;
-  margin: 0 auto var(--sp-12) auto;
+  margin: 0 auto var(--sp-8) auto;
   padding: 0 20px;
-}
-
-.header :global(.section-eyebrow) {
-  color: #38bdf8 !important;
 }
 
 .sectionTitle {
   font-size: clamp(28px, 3.2vw, 44px);
   font-weight: 900;
-  color: #ffffff;
+  color: var(--color-text, #1A1A2E);
   margin-top: 0;
   margin-bottom: 8px;
   line-height: 1.18;
@@ -30,602 +26,183 @@
 
 .sectionSubtitle {
   font-size: var(--font-size-lg);
-  color: #94a3b8;
+  color: var(--color-text-secondary, #4A5568);
   line-height: 1.6;
   max-width: 680px;
   margin: 0 auto;
 }
 
-.tierLabel {
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-primary);
-  text-align: center;
-  margin: 0 auto var(--sp-2) auto;
-}
-
-/* ─── Carousel Wrapper (3D Viewport) ─────────────────── */
-.carouselWrapper {
-  position: relative;
-  width: 100%;
-  max-width: 1180px;
-  min-height: 440px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  perspective: 1500px; /* Crucial for 3D depth */
-  overflow: visible;
-}
-
-.carousel {
-  position: relative;
-  width: 100%;
-  height: 440px;
-  padding: 0 32px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: stretch;
-  transform-style: preserve-3d;
-  overflow: visible;
-  box-sizing: border-box;
-  touch-action: pan-y;
-}
-
-.slide {
-  position: absolute;
-  top: 0;
-  left: 32px;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  will-change: transform, opacity, width;
-  padding: 0 var(--sp-1);
-}
-
-/* ─── Card Design ────────────────────────────────────── */
-.card {
-  position: relative;
-  display: flex;
-  width: 100%;
-  height: 100%;
-  background: #0d1117;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  border: none;
-  transition: box-shadow var(--transition-base, 0.3s ease);
-}
-
-.cardSide {
-  background: rgba(13, 17, 23, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: none;
-}
-
-.cardSide .cardImgWrap {
-  opacity: 0.3;
-}
-
-.cardSide .cardContent,
-.cardSide .cardContentPreview,
-.cardSide .cardCategory,
-.cardSide .cardTitle,
-.cardSide .cardDesc,
-.cardSide .cardCta {
-  transition: opacity 0.4s ease 0s !important;
-}
-
-.cardSide .cardContentPreview {
-  width: calc(100% - 40px) !important;
-  min-width: calc(100% - 40px) !important;
-  max-width: calc(100% - 40px) !important;
-  margin: 0 20px 48px 20px !important;
-  box-sizing: border-box;
-}
-
-.cardSide .cardContent {
-  width: calc(100% - 40px) !important;
-  margin: 0 20px 48px 20px !important;
-  opacity: 1;
-}
-
-/* Highlighting Focused (Center) Card */
-.cardFocused {
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
-}
-
-/* Left Content Overlay */
-.cardContent {
-  position: relative;
-  z-index: 3;
-  width: calc(100% - 96px);
-  max-width: 680px;
-  margin: 0 0 48px 48px;
-  padding: 28px 36px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-self: flex-end;
-  background: rgba(255, 255, 255, 0.68);
-  backdrop-filter: blur(32px) saturate(210%);
-  -webkit-backdrop-filter: blur(32px) saturate(210%);
-  border-radius: 20px;
-  border: 1.5px solid rgba(255, 255, 255, 0.55);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-              max-width 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-              margin 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-              padding 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-              border-radius 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-}
-
-.cardContentPreview {
-  width: calc(100% - 32px) !important;
-  max-width: 230px !important;
-  margin: 0 0 48px 20px !important;
-  padding: 16px 20px !important;
-  border-radius: 16px !important;
-}
-
-.cardContentHidden {
-  opacity: 0 !important;
-  pointer-events: none;
-}
-
-.cardContentPreview .cardCategory {
-  font-size: 9px !important;
-  margin-bottom: 4px !important;
-}
-
-.cardContentPreview .cardTitle {
-  font-size: 15px !important;
-  margin-bottom: 0 !important;
-  line-height: 1.25 !important;
-}
-
-.cardCategory {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--color-primary, #034EA2);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin-bottom: 8px;
-  display: inline-block;
-  transition: font-size 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-              margin-bottom 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cardTitle {
-  font-size: clamp(22px, 2.3vw, 28px);
-  font-weight: 800;
-  color: var(--color-text, #1A1A2E);
-  margin-bottom: 10px;
-  line-height: 1.15;
-  transition: font-size 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-              margin-bottom 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-              line-height 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cardDesc {
-  font-size: 14.5px;
-  color: var(--color-text-secondary, #4A5568);
-  line-height: 1.5;
-  margin-bottom: 20px;
-}
-
-/* Glass CTA Link */
-.cardCta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 24px;
-  background: var(--color-bg);
-  color: var(--color-primary);
-  font-size: 13.5px;
-  font-weight: 700;
-  border-radius: var(--radius-lg);
-  border: 1.5px solid var(--color-primary);
-  cursor: pointer;
-  text-decoration: none;
-  transition: all var(--transition-fast, 0.2s);
-  align-self: flex-start;
-}
-
-.cardCta:hover {
-  background: var(--color-primary-light);
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
-}
-
-/* Background Image Wrapping & Overlay */
-.cardImgWrap {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.cardImg {
-  object-fit: cover;
-  transition: transform var(--transition-slow, 0.5s ease);
-}
-
-.cardFocused:hover .cardImg {
-  transform: scale(1.06);
-}
-
-.cardOverlay {
-  display: none;
-}
-
-.carouselArrows {
-  position: absolute;
-  top: 50%;
-  left: -64px;
-  right: -64px;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  transform: translateY(-50%);
-  padding: 0;
-  z-index: 20;
-  pointer-events: none;
-}
-
-.tierLabelSecondary {
-  margin-top: var(--sp-3);
-  margin-bottom: var(--sp-3);
-}
-
-.navBtn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.85);
-  color: var(--color-text);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
-  box-shadow: var(--shadow-sm);
-  pointer-events: auto;
-}
-
-.navBtn:hover {
-  transform: translateY(-1px);
-  border-color: var(--color-primary);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-md);
-}
-
-.specialitiesGridEdgeToEdge {
+/* ─── Grid ───────────────────────────────────────────── */
+.specialitiesGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
   width: 100%;
-  margin-top: var(--sp-10);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  background: #0b0f19;
 }
 
-/* 3D Flip Card Container */
-.flipCardWrapper {
+.specialityCard {
   position: relative;
-  height: 360px;
-  perspective: 1200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 0;
+  overflow: hidden;
   text-decoration: none;
-  display: block;
-  box-sizing: border-box;
-  overflow: visible;
+  background: transparent;
+  aspect-ratio: 1 / 1;
+  transition: transform var(--transition-base);
 }
 
-.flipCardInner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transition: transform 0s;
-}
-
-.flipCardWrapper:hover .flipCardInner {
-  transform: rotateY(180deg);
-  transition: transform 0.75s cubic-bezier(0.2, 0.85, 0.32, 1.1);
-}
-
-/* Front & Back Faces */
-.flipCardFront,
-.flipCardBack {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  box-sizing: border-box;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* FRONT FACE */
-.flipCardFront {
-  background: #0b0f19;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 28px 24px;
+.specialityCard:hover {
   z-index: 2;
 }
 
-.cardImageContainer {
+.cardImage {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.cardCoverImg {
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: brightness(0.7) contrast(1.05);
-  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform var(--transition-slow);
 }
 
-.imgContain {
-  object-fit: contain;
-  background: radial-gradient(circle at 50% 50%, #151f32 0%, #0b0f19 100%);
-  padding: 32px;
-}
-
-.flipCardWrapper:hover .cardCoverImg {
-  transform: scale(1.06);
-}
-
-.vignetteOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(11, 15, 25, 0.95) 0%,
-    rgba(11, 15, 25, 0.45) 55%,
-    rgba(11, 15, 25, 0.1) 100%
-  );
-  z-index: 2;
-}
-
-.frontContent {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  pointer-events: none;
-}
-
-.specIconBadge {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.4s ease, border-color 0.4s ease;
-}
-
-.flipCardWrapper:hover .specIconBadge {
+.specialityCard:hover .cardImage {
   transform: scale(1.05);
-  border-color: rgba(255, 255, 255, 0.35);
 }
 
-.specIconImg {
-  width: 24px;
-  height: 24px;
-  filter: brightness(0) invert(1);
-}
-
-.frontTitle {
-  font-size: 21px;
-  font-weight: 800;
-  color: #ffffff;
-  margin: 0;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-}
-
-/* BACK FACE */
-.flipCardBack {
-  transform: rotateY(180deg);
-  background: #0a0e17;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 24px 20px;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.backVideo {
+.cardVideo {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.42;
-  pointer-events: none;
+  opacity: 0;
   z-index: 1;
+  transition: opacity var(--transition-base), transform var(--transition-slow);
 }
 
-.videoOverlay {
+.specialityCard:hover .cardVideo {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.specialityCard::after {
+  content: "";
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(3, 78, 162, 0.88) 0%,
-    rgba(99, 102, 241, 0.82) 50%,
-    rgba(219, 39, 119, 0.82) 100%
-  );
-  mix-blend-mode: multiply;
-  z-index: 2;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  z-index: 10;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+  transition: background var(--transition-base);
 }
 
-.backContent {
+.specialityCard:hover::after {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, rgba(0, 0, 0, 0) 100%);
+}
+
+/* Blend the last row into the dark blue background of the next section */
+.specialityCard:nth-last-child(-n+4)::after {
+  height: 60%;
+  background: linear-gradient(to top, #0f1d33 0%, #0f1d33 10%, rgba(15, 29, 51, 0.4) 50%, transparent 100%);
+}
+
+.specialityCard:nth-last-child(-n+4):hover::after {
+  height: 60%;
+  background: linear-gradient(to top, #0f1d33 0%, #0f1d33 15%, rgba(15, 29, 51, 0.6) 60%, transparent 100%);
+}
+
+.cardTextWrap {
   position: relative;
-  z-index: 3;
+  z-index: 20;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  justify-content: space-between;
-  text-align: left;
+  gap: 6px;
+  width: 100%;
 }
 
-.backTitle {
-  font-size: 20px;
-  font-weight: 850;
-  color: #ffffff;
-  margin: 0;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
+.cardStats {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
   transform: translateY(10px);
-  opacity: 0;
-  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s,
-              opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s;
-}
-
-.flipCardWrapper:hover .backTitle {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-.statsDivider {
-  width: 32px;
-  height: 1.5px;
-  background: rgba(255, 255, 255, 0.35);
-  margin: 6px 0;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.45s ease 0.15s;
-}
-
-.flipCardWrapper:hover .statsDivider {
-  transform: scaleX(1);
-}
-
-.statsList {
+  filter: blur(4px);
+  transition: all var(--transition-base);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 2px;
 }
 
-.statItem {
-  display: flex;
-  flex-direction: column;
-  transform: translateY(14px);
-  opacity: 0;
-  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
-              opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.flipCardWrapper:hover .statItem:nth-child(1) {
-  transform: translateY(0);
+.specialityCard:hover .cardStats {
   opacity: 1;
-  transition-delay: 0.18s;
-}
-
-.flipCardWrapper:hover .statItem:nth-child(2) {
+  max-height: 60px;
   transform: translateY(0);
-  opacity: 1;
-  transition-delay: 0.25s;
+  filter: blur(0);
+  margin-bottom: 8px;
 }
 
-.flipCardWrapper:hover .statItem:nth-child(3) {
-  transform: translateY(0);
-  opacity: 1;
-  transition-delay: 0.32s;
-}
-
-.statVal {
-  font-size: 18px;
-  font-weight: 900;
-  color: #38bdf8;
+.metricValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
   line-height: 1.1;
 }
 
-.statLabel {
-  font-size: 10px;
+.metricLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.3;
+}
+
+.specialityName {
+  font-size: clamp(18px, 2vw, 24px);
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-top: 1px;
+  color: #ffffff;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
-.specialitiesCtaWrap {
-  text-align: center;
-  margin-top: var(--sp-12);
-}
-
-.specialitiesCta {
-  display: inline-flex;
+.cardAction {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 28px;
-  border-radius: var(--radius-lg);
-  border: 1.5px solid var(--color-primary);
-  color: var(--color-primary);
-  background: rgba(255, 255, 255, 0.45);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all var(--transition-base);
 }
 
-.specialitiesCta:hover {
-  transform: translateY(-1px);
-  background: var(--color-primary);
-  color: var(--color-text-inverse);
-  box-shadow: var(--shadow-md);
+.specialityCard:hover .cardAction {
+  opacity: 1;
+  transform: translateY(0);
 }
+
+/* ─── CTA Button ─────────────────────────────────────── */
+
+
 
 /* ─── Responsive ─────────────────────────────────────── */
-@media (max-width: 1200px) {
-  .carouselWrapper {
-    max-width: 1040px;
-    height: 470px;
+@media (max-width: 1024px) {
+  .specialitiesGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
   }
+}
 
-  .carousel {
-    height: 390px;
-  }
-
-  .slide {
-    height: 390px;
-  }
+.gridAnimatedWrapper {
+  padding: 0 calc(250px * var(--progress, 0));
 }
 
 @media (max-width: 1024px) {
-  .specialitiesGridEdgeToEdge {
-    grid-template-columns: repeat(3, 1fr);
+  .gridAnimatedWrapper {
+    padding: 0 calc(var(--sp-2) * var(--progress, 0));
   }
 }
 
@@ -634,101 +211,32 @@
     padding: 60px 0;
   }
 
-  .carouselWrapper {
-    height: 430px;
-    perspective: none;
+  .gridAnimatedWrapper {
+    padding: 0 !important;
+    border-radius: 0 !important;
   }
 
-  .carousel {
-    height: 340px;
-    padding: 0;
-  }
-
-  .slide {
-    width: 100%;
-    max-width: 90%;
-    height: 340px;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-  }
-
-  .card {
-    height: 100%;
-  }
-
-  .cardContent {
-    padding: 32px;
-    max-width: 100%;
-    justify-content: flex-end;
-  }
-
-  .cardOverlay {
-    background: linear-gradient(
-      to bottom,
-      rgba(13, 17, 23, 0.3) 0%,
-      rgba(13, 17, 23, 0.8) 50%,
-      rgba(13, 17, 23, 0.95) 100%
-    );
-  }
-
-  .specialitiesGridEdgeToEdge {
+  .specialitiesGrid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 0;
   }
 
-  .flipCardWrapper {
-    height: 300px;
+  .cardTextWrap {
+    padding: 16px;
   }
 
-  .carouselArrows {
-    margin-top: var(--sp-1);
-  }
-}
-
-@media (max-width: 550px) {
-  .carouselWrapper {
-    height: 510px;
-  }
-  
-  .carousel, .slide {
-    height: 420px;
-  }
-
-  .carouselArrows {
-    top: auto;
-    bottom: 20px;
-    transform: none;
-    justify-content: center;
-    gap: 24px;
-    padding: 0;
-  }
-
-  .carouselArrows > button:first-child,
-  .carouselArrows > button:last-child {
-    margin: 0;
+  .specialityName {
+    font-size: 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .carouselWrapper {
-    height: 570px;
-  }
-  
-  .carousel, .slide {
-    height: 480px;
-  }
-
-  .specialitiesGridEdgeToEdge {
+  .specialitiesGrid {
     grid-template-columns: 1fr;
+    gap: 0;
   }
 
-  .flipCardWrapper {
-    height: 280px;
-  }
-}
-
-@media (max-width: 460px) {
-  .slide {
-    max-width: 85%;
+  .specialityCard {
+    aspect-ratio: 16 / 9;
   }
 }
