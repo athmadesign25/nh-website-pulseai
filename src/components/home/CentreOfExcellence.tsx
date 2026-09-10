@@ -8,7 +8,8 @@ import {
   animate,
   useInView,
 } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronUp } from "lucide-react";
+import WordPullUp from "@/components/ui/word-pull-up";
 import styles from "./CentreOfExcellence.module.css";
 
 const SPECIALITIES = [
@@ -214,25 +215,27 @@ export default function CentreOfExcellence() {
   const titleTrackRef = useRef<HTMLDivElement>(null);
   const gridSectionRef = useRef<HTMLDivElement>(null);
 
-  // 1. Sticky Header Track Scroll Sequence
+  // 1. Sticky Header Track Scroll Sequence (Editorial Mask Reveal)
   const { scrollYProgress: titleScrollProgress } = useScroll({
     target: titleTrackRef,
     offset: ["start 80%", "end end"],
   });
 
-  const eyebrowOpacity = useTransform(titleScrollProgress, [0.00, 0.04, 0.88, 0.98], [1, 1, 1, 0]);
-  const eyebrowY = useTransform(titleScrollProgress, [0.00, 0.04, 0.88, 0.98], [10, 0, 0, -16]);
+  // Eyebrow: enters 0.06 -> 0.22, holds until 0.86, exits 0.86 -> 0.98
+  const eyebrowY = useTransform(titleScrollProgress, [0.06, 0.22, 0.86, 0.98], ["110%", "0%", "0%", "-110%"]);
+  const eyebrowOpacity = useTransform(titleScrollProgress, [0.06, 0.16, 0.88, 0.98], [0, 1, 1, 0]);
 
-  const titleOpacity = useTransform(titleScrollProgress, [0.00, 0.04, 0.88, 0.98], [1, 1, 1, 0]);
-  const titleY = useTransform(titleScrollProgress, [0.00, 0.04, 0.88, 0.98], [12, 0, 0, -16]);
+  // Main Heading: enters 0.18 -> 0.42, holds until 0.86, exits 0.86 -> 0.98
+  const titleY = useTransform(titleScrollProgress, [0.18, 0.42, 0.86, 0.98], ["110%", "0%", "0%", "-110%"]);
+  const titleOpacity = useTransform(titleScrollProgress, [0.18, 0.30, 0.88, 0.98], [0, 1, 1, 0]);
 
-  const subtitleOpacity = useTransform(titleScrollProgress, [0.00, 0.04, 0.88, 0.98], [1, 1, 1, 0]);
-  const subtitleY = useTransform(titleScrollProgress, [0.00, 0.04, 0.88, 0.98], [12, 0, 0, -16]);
+  // Subtitle: enters 0.30 -> 0.56, holds until 0.86, exits 0.86 -> 0.98
+  const subtitleY = useTransform(titleScrollProgress, [0.30, 0.56, 0.86, 0.98], ["110%", "0%", "0%", "-110%"]);
+  const subtitleOpacity = useTransform(titleScrollProgress, [0.30, 0.44, 0.88, 0.98], [0, 1, 1, 0]);
 
-  const strokeProgressHeight = useTransform(titleScrollProgress, [0.04, 0.75], ["0%", "100%"]);
-
-  const indicatorOpacity = useTransform(titleScrollProgress, [0.00, 0.04, 0.88, 0.98], [1, 1, 1, 0]);
-  const indicatorY = useTransform(titleScrollProgress, [0.00, 0.04, 0.88, 0.98], [10, 0, 0, -12]);
+  // Scroll Indicator
+  const indicatorOpacity = useTransform(titleScrollProgress, [0.00, 0.10, 0.82, 0.94], [0, 1, 1, 0]);
+  const indicatorY = useTransform(titleScrollProgress, [0.00, 0.10, 0.82, 0.94], [16, 0, 0, -14]);
 
   // 2. Animated Grid Reveal Section
   const { scrollYProgress: gridScrollProgress } = useScroll({
@@ -244,9 +247,19 @@ export default function CentreOfExcellence() {
   const gridRadius = useTransform(gridScrollProgress, [0, 1], ["24px", "0px"]);
   const gridOpacity = useTransform(gridScrollProgress, [0, 0.6], [0, 1]);
 
-  // White 8px stroke around grid wrapper, disappears when section reaches full horizontal state (gridScrollProgress -> 1)
-  const gridBorderWidth = useTransform(gridScrollProgress, [0, 0.9, 1], ["8px", "8px", "0px"]);
-  const gridBorderColor = useTransform(gridScrollProgress, [0, 0.9, 1], ["#FFFFFF", "#FFFFFF", "transparent"]);
+  // 3. Exit Shrink & Rounding Transformation: gridAnimatedWrapper shrinks (1.0 -> 0.88) and corners round (0px -> 44px) as user scrolls out of the section
+  const { scrollYProgress: gridExitScrollProgress } = useScroll({
+    target: gridSectionRef,
+    offset: ["end end", "end start"],
+  });
+
+  const exitScale = useTransform(gridExitScrollProgress, [0.0, 0.75], [1.0, 0.88]);
+  const exitRadius = useTransform(gridExitScrollProgress, [0.0, 0.75], ["0px", "44px"]);
+
+  const combinedScale = useTransform([gridScale, exitScale], ([sIn, sOut]) => Number(sIn) * Number(sOut));
+  const combinedRadius = useTransform([gridRadius, exitRadius], ([rIn, rOut]) => {
+    return rOut !== "0px" ? rOut : rIn;
+  });
 
   return (
     <div ref={wrapperRef} className={styles.wrapper}>
@@ -255,57 +268,74 @@ export default function CentreOfExcellence() {
         <section className={styles.stickySection} id="centre-of-excellence">
           <div className={styles.centerContent}>
             <div className={styles.header}>
+              <div className={styles.maskWrap} style={{ marginBottom: "20px" }}>
+                <motion.div
+                  style={{
+                    y: eyebrowY,
+                    opacity: eyebrowOpacity,
+                    color: "#000000",
+                  }}
+                  className="section-eyebrow"
+                >
+                  CENTRES OF EXCELLENCE
+                </motion.div>
+              </div>
+
               <motion.div
                 style={{
-                  opacity: eyebrowOpacity,
-                  y: eyebrowY,
-                  color: "#000000",
-                  marginBottom: "28px",
+                  y: titleY,
+                  opacity: titleOpacity,
                 }}
-                className="section-eyebrow"
               >
-                CENTRES OF EXCELLENCE
+                <WordPullUp
+                  words="40+ Specialities. World-Class Care."
+                  as="h2"
+                  className={styles.sectionTitle}
+                  delayMultiple={0.09}
+                  framerProps={{
+                    hidden: { y: 16, opacity: 0 },
+                    show: {
+                      y: 0,
+                      opacity: 1,
+                      transition: {
+                        duration: 0.55,
+                        ease: [0.22, 1, 0.36, 1],
+                      },
+                    },
+                  }}
+                />
               </motion.div>
 
-              <motion.h2
-                style={{
-                  opacity: titleOpacity,
-                  y: titleY,
-                }}
-                className={styles.sectionTitle}
-              >
-                40+ Specialities. World-Class Care.
-              </motion.h2>
-
-              <motion.p
-                style={{
-                  opacity: subtitleOpacity,
-                  y: subtitleY,
-                }}
-                className={styles.sectionSubtitle}
-              >
-                Integrated expertise across tertiary and quaternary care,
-                <br />
-                delivered through one trusted network.
-              </motion.p>
+              <div className={styles.maskWrap}>
+                <motion.p
+                  style={{
+                    y: subtitleY,
+                    opacity: subtitleOpacity,
+                  }}
+                  className={styles.sectionSubtitle}
+                >
+                  Integrated expertise across tertiary and quaternary care,
+                  <br />
+                  delivered through one trusted network.
+                </motion.p>
+              </div>
             </div>
           </div>
 
-          {/* Bottom Spaced Scroll Up Progress Dash Indicator Unit */}
+          {/* Bottom Spaced Keep Scrolling Indicator Unit with Double Blinking Top Arrow */}
           <motion.div
             className={styles.scrollIndicatorUnit}
             style={{
               opacity: indicatorOpacity,
               y: indicatorY,
+              x: "-50%",
             }}
           >
-            <div className={styles.scrollDashTrack}>
-              <motion.div
-                className={styles.scrollDashFill}
-                style={{ height: strokeProgressHeight }}
-              />
+            <div className={styles.doubleBlinkingArrows}>
+              <ChevronUp size={18} className={styles.arrowTop} />
+              <ChevronUp size={18} className={styles.arrowBottom} />
             </div>
-            <span className={styles.scrollUpText}>Scroll Up</span>
+            <span className={styles.scrollUpText}>Keep Scrolling</span>
           </motion.div>
         </section>
       </div>
@@ -315,12 +345,9 @@ export default function CentreOfExcellence() {
         <motion.div
           className={styles.gridAnimatedWrapper}
           style={{
-            scale: gridScale,
-            borderRadius: gridRadius,
+            scale: combinedScale,
+            borderRadius: combinedRadius,
             opacity: gridOpacity,
-            borderWidth: gridBorderWidth,
-            borderStyle: "solid",
-            borderColor: gridBorderColor,
             transformOrigin: "center top",
           }}
         >
@@ -329,15 +356,15 @@ export default function CentreOfExcellence() {
               <SpecialityCardItem key={idx} spec={spec} />
             ))}
           </div>
-        </motion.div>
 
-        {/* View All Specialties CTA Button */}
-        <div className={styles.bottomCtaWrap}>
-          <a href="/specialities" className={styles.viewAllBtn}>
-            View All Specialties
-            <ChevronRight size={16} />
-          </a>
-        </div>
+          {/* Seamless Dark Grid Extension with View All Specialties CTA */}
+          <div className={styles.gridBottomStrip}>
+            <a href="/specialities" className={styles.viewAllBtn}>
+              View All Specialties
+              <ChevronRight size={16} />
+            </a>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
