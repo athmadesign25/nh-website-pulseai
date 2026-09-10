@@ -45,39 +45,10 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   const [scrolled, setScrolled] = useState(false);
-<<<<<<< HEAD
-  const [showSearchIcon, setShowSearchIcon] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [isLoginDropdownOpen, setIsLoginDropdownOpen] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = sessionStorage.getItem("isLoggedIn");
-      setIsLoggedIn(stored !== "false");
-    }
-
-    const handleGlobalLoginState = () => {
-      const stored = sessionStorage.getItem("isLoggedIn");
-      setIsLoggedIn(stored !== "false");
-    };
-    window.addEventListener("login-state-changed", handleGlobalLoginState);
-    return () => window.removeEventListener("login-state-changed", handleGlobalLoginState);
-  }, []);
-
-  const handleToggleLogin = (status: boolean) => {
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("isLoggedIn", status ? "true" : "false");
-      setIsLoggedIn(status);
-      window.dispatchEvent(new Event("login-state-changed"));
-      setIsLoginDropdownOpen(false);
-    }
-  };
-=======
   const [isVisible, setIsVisible] = useState(true);
   const [isOverLightBackground, setIsOverLightBackground] = useState(false);
   const isOverLightRef = useRef(false);
   const lastScrollY = useRef(0);
->>>>>>> nh-herov4/main
 
   useEffect(() => {
     const handleScroll = () => {
@@ -152,19 +123,10 @@ export default function Navbar() {
         top: "0px",
         zIndex: 1000,
         width: "100%",
-<<<<<<< HEAD
-        backgroundColor: isNavbarActive ? "rgba(255, 255, 255, 0.8)" : "transparent",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        boxShadow: isNavbarActive ? "rgba(0, 0, 0, 0.05) 0px 1px 3px, inset 0 -1px 0 rgba(255, 255, 255, 0.2)" : "none",
-        transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
-      }}
-=======
         transform: isVisible ? "translateY(0)" : "translateY(-100%)",
         transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
         "--nav-fg-color": isOverLightBackground ? "var(--color-text, #0f172a)" : "#ffffff"
       } as React.CSSProperties}
->>>>>>> nh-herov4/main
     >
       <div
         style={{
@@ -370,123 +332,6 @@ export default function Navbar() {
               <ChevronDown size={14} />
             </span>
           </div>
-<<<<<<< HEAD
-          <button
-            aria-label="Search"
-            onClick={() => setIsSearchOpen(true)}
-            style={{
-              padding: showSearchIcon ? "8px" : "0px",
-              width: showSearchIcon ? "34px" : "0px",
-              opacity: showSearchIcon ? 1 : 0,
-              visibility: showSearchIcon ? "visible" : "hidden",
-              pointerEvents: showSearchIcon ? "auto" : "none",
-              cursor: "pointer",
-              background: "transparent",
-              border: "none",
-              color: isNavbarActive ? "var(--text-primary, #333)" : "#FFFFFF",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-              overflow: "hidden",
-            }}
-          >
-            <Search size={18} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-          </button>
-          <div 
-            style={{ position: "relative", display: "inline-block" }}
-            onMouseEnter={() => setIsLoginDropdownOpen(true)}
-            onMouseLeave={() => setIsLoginDropdownOpen(false)}
-            className={styles.loginBtnResponsive}
-          >
-            <button 
-              className={`${isNavbarActive ? styles.loginBtnActive : styles.loginBtnInactive}`} 
-              style={{
-                background: "transparent",
-                fontSize: "13px",
-                fontWeight: 600,
-                padding: "8px 20px",
-                borderRadius: "9999px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                transition: "all 0.2s ease"
-              }}
-            >
-              <span style={{
-                display: "inline-block",
-                width: "8px",
-                height: "8px",
-                borderRadius: "50%",
-                background: isLoggedIn ? "#10b981" : "#ef4444"
-              }} />
-              {isLoggedIn ? "Omkar V" : "Login"}
-              <ChevronDown size={12} />
-            </button>
-
-            {isLoginDropdownOpen && (
-              <div style={{
-                position: "absolute",
-                top: "100%",
-                right: 0,
-                background: "#ffffff",
-                border: "1px solid #e2e8f0",
-                borderRadius: "12px",
-                boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                padding: "8px 0",
-                minWidth: "160px",
-                zIndex: 100
-              }}>
-                <button
-                  onClick={() => handleToggleLogin(true)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    width: "100%",
-                    padding: "10px 16px",
-                    border: "none",
-                    background: "transparent",
-                    color: "#334155",
-                    fontSize: "13px",
-                    fontWeight: isLoggedIn ? 700 : 500,
-                    cursor: "pointer",
-                    textAlign: "left"
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                >
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} />
-                  Simulate Log In
-                </button>
-                <button
-                  onClick={() => handleToggleLogin(false)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    width: "100%",
-                    padding: "10px 16px",
-                    border: "none",
-                    background: "transparent",
-                    color: "#334155",
-                    fontSize: "13px",
-                    fontWeight: !isLoggedIn ? 700 : 500,
-                    cursor: "pointer",
-                    textAlign: "left"
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
-                >
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444" }} />
-                  Simulate Log Out
-                </button>
-              </div>
-            )}
-          </div>
-          <button 
-=======
 
           {isLoggedIn ? (
             <div style={{ position: "relative" }} ref={profileDropdownRef}>
@@ -662,23 +507,19 @@ export default function Navbar() {
               Login
             </button>
           )}
-          <button 
+          <Link 
+            href="/login" 
             className={styles.loginIconResponsive} 
-            onClick={() => setIsLoginModalOpen(true)}
-            aria-label="Login"
             style={{ 
               color: "var(--nav-fg-color)", 
               padding: "8px", 
               alignItems: "center", 
               justifyContent: "center",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
               transition: "color 0.4s ease"
             }}
           >
             <User size={18} strokeWidth={2.5} />
-          </button>
+          </Link>
           <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open navigation menu" style={{ color: "var(--nav-fg-color)", padding: "8px", display: "none", cursor: "pointer", background: "none", border: "none", transition: "color 0.4s ease" }} className="mobile-menu-btn">
             <Menu size={24} />
           </button>
