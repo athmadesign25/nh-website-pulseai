@@ -34,8 +34,16 @@ export default function DefaultSearchPrompt({
 
   return (
     <div className={styles.landingContainer}>
-      {/* Top row: Placeholder + Pulse AI badge */}
-      <div className={styles.landingInputRow} onClick={onActivate} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onActivate(); }}>
+      {/* Top row: Primary Prompt + Pulse AI */}
+      <div
+        className={styles.landingInputRow}
+        onClick={onActivate}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") onActivate();
+        }}
+      >
         <span className={styles.landingPlaceholder}>How can we help you today?</span>
 
         <div className={styles.pulseBadge}>
@@ -48,9 +56,9 @@ export default function DefaultSearchPrompt({
         </div>
       </div>
 
-      {/* Bottom row: Paperclip, Location, Quick Actions, Mic, Submit Arrow */}
+      {/* Spacious Lower Interaction Row */}
       <div className={styles.landingBottomRow}>
-        <div className={styles.bottomPillsGroup}>
+        <div className={styles.bottomControlsLeft}>
           <button
             type="button"
             className={styles.iconControlBtn}
@@ -63,7 +71,7 @@ export default function DefaultSearchPrompt({
             <Paperclip size={18} />
           </button>
 
-          {/* Location Selector Pill */}
+          {/* Location Selector */}
           <div className={styles.locationPillWrapper} ref={locationRef} style={{ position: "relative" }}>
             <button
               type="button"
@@ -75,9 +83,15 @@ export default function DefaultSearchPrompt({
               aria-expanded={isLocationOpen}
               aria-label={`Select city, current city is ${selectedLocation}`}
             >
-              <MapPin size={14} color="#FF6B6B" />
+              <MapPin size={14} className={styles.locationPinIcon} />
               <span>{selectedLocation}</span>
-              <ChevronDown size={13} style={{ transform: isLocationOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+              <ChevronDown
+                size={13}
+                style={{
+                  transform: isLocationOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 0.2s",
+                }}
+              />
             </button>
 
             {isLocationOpen && (
@@ -86,7 +100,9 @@ export default function DefaultSearchPrompt({
                   <button
                     key={loc}
                     type="button"
-                    className={`${styles.locationMenuItem} ${loc === selectedLocation ? styles.locationMenuItemSelected : ""}`}
+                    className={`${styles.locationMenuItem} ${
+                      loc === selectedLocation ? styles.locationMenuItemSelected : ""
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onSelectLocation(loc);
@@ -100,34 +116,34 @@ export default function DefaultSearchPrompt({
             )}
           </div>
 
-          {/* Quick Action Pills */}
+          {/* Action Starting Points */}
           <button
             type="button"
-            className={styles.actionPill}
+            className={styles.actionBtnDoctor}
             onClick={(e) => {
               e.stopPropagation();
               onSelectActionPill("doctor");
             }}
           >
-            <User size={14} color="#38BDF8" />
+            <User size={14} />
             <span>Find a doctor</span>
           </button>
 
           <button
             type="button"
-            className={styles.actionPill}
+            className={styles.actionBtnSymptoms}
             onClick={(e) => {
               e.stopPropagation();
               onSelectActionPill("symptoms");
             }}
           >
-            <Stethoscope size={14} color="#EC4899" />
+            <Stethoscope size={14} />
             <span>Describe my symptoms</span>
           </button>
         </div>
 
-        {/* Right side controls: Mic + Arrow Submit */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        {/* Right side controls: Microphone + Primary Submit Arrow */}
+        <div className={styles.bottomControlsRight}>
           <button
             type="button"
             className={styles.iconControlBtn}
