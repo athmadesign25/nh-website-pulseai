@@ -341,8 +341,8 @@
   border: none;
   outline: none;
   font-family: inherit;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 500;
   color: #FFFFFF;
   line-height: 1.4;
   letter-spacing: -0.01em;
@@ -369,13 +369,13 @@
   align-items: center;
   pointer-events: none;
   font-family: inherit;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 18px;
   line-height: 1.4;
   letter-spacing: -0.01em;
-  user-select: none;
-  white-space: pre;
   z-index: 1;
+  white-space: pre;
+  overflow: hidden;
+  user-select: none;
   padding: 0;
   margin: 0;
 }
@@ -387,7 +387,7 @@
 }
 
 .ghostSuffix {
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.4);
   font-weight: 400;
   letter-spacing: -0.01em;
   pointer-events: auto;
@@ -439,12 +439,11 @@
 
 /* ── Empty State Canvas (Before Typing) ── */
 .emptyCanvasPrompt {
-  margin-top: 20px;
-  padding: 18px 4px 10px;
+  margin-top: 14px;
+  padding: 6px 0 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  animation: fadeInEmpty 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeInEmpty 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeInEmpty {
@@ -458,21 +457,12 @@
   }
 }
 
-.emptyPromptTitle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #F8FAFC;
-  letter-spacing: -0.01em;
-}
-
 .emptyPromptSub {
   font-size: 13.5px;
-  color: #94A3B8;
+  color: #64748B;
+  font-weight: 400;
   line-height: 1.5;
-  margin: 2px 0 12px;
+  margin: 0;
 }
 
 .genericCategoriesRow {

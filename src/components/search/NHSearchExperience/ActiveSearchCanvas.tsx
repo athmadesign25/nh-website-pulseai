@@ -258,38 +258,9 @@ export default function ActiveSearchCanvas({
       {/* ── STATE 2: EMPTY CANVAS (When user has not typed yet) ── */}
       {!prediction && query.trim().length === 0 && (
         <div className={styles.emptyCanvasPrompt}>
-          <div className={styles.emptyPromptTitle}>
-            <Sparkles size={15} className={styles.sparkleIcon} />
-            <span>Start typing anything related to your care.</span>
-          </div>
           <p className={styles.emptyPromptSub}>
-            Symptoms · Conditions · Specialists · Procedures · Doctors
+            Start typing a symptom, condition, specialty, procedure or doctor name.
           </p>
-          <div className={styles.genericCategoriesRow}>
-            <button
-              type="button"
-              className={styles.genericExampleChip}
-              onClick={() => onQueryChange("Find a doctor")}
-            >
-              Find a doctor
-            </button>
-            <span className={styles.genericDot}>·</span>
-            <button
-              type="button"
-              className={styles.genericExampleChip}
-              onClick={() => onQueryChange("Knee pain")}
-            >
-              Knee pain
-            </button>
-            <span className={styles.genericDot}>·</span>
-            <button
-              type="button"
-              className={styles.genericExampleChip}
-              onClick={() => onQueryChange("Health checkup")}
-            >
-              Health checkup
-            </button>
-          </div>
         </div>
       )}
 
