@@ -12,18 +12,6 @@
   display: flex;
   justify-content: center;
   z-index: 50;
-  perspective: 1200px;
-}
-
-/* ── Backing Dimmer Overlay when Active or Results ── */
-.canvasBackdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(6, 10, 20, 0.55);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  z-index: 40;
-  pointer-events: auto;
 }
 
 /* ── Main Unified Search Shell ── */

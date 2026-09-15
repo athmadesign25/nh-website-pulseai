@@ -147,6 +147,21 @@ export default function NHSearchExperience({
     handleSubmit(`${tag} specialist in ${selectedLocation}`);
   };
 
+  // Handle click outside to close active/results state
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        searchState !== "landing" &&
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        handleClose();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [searchState]);
+
   // Handle Ask Pulse CTA
   const handleAskPulse = () => {
     if (onOpenPulseAI) {
@@ -168,20 +183,6 @@ export default function NHSearchExperience({
 
   return (
     <div className={styles.searchExperienceWrapper} ref={containerRef}>
-      {/* Dimmer Backdrop overlay when active or displaying results */}
-      <AnimatePresence>
-        {searchState !== "landing" && (
-          <motion.div
-            className={styles.canvasBackdrop}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: prefersReducedMotion ? 0.1 : 0.3 }}
-            onClick={handleClose}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Unified expanding search container */}
       <motion.div
         layout
