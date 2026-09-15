@@ -944,7 +944,7 @@
   font-size: 12px;
   font-weight: 600;
   color: #FFFFFF;
-  background: #ED1C24;
+  background: #034EA2;
   border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 6px 14px;
   border-radius: 6px;
@@ -952,12 +952,12 @@
   transition: all 0.18s ease;
   letter-spacing: 0.01em;
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba(237, 28, 36, 0.25);
+  box-shadow: 0 2px 8px rgba(3, 78, 162, 0.3);
 }
 
 .bookApptBtn:hover {
-  background: #FF2E36;
-  box-shadow: 0 4px 12px rgba(237, 28, 36, 0.4);
+  background: #0066FF;
+  box-shadow: 0 4px 14px rgba(3, 78, 162, 0.5);
   transform: translateY(-1px);
 }
 
