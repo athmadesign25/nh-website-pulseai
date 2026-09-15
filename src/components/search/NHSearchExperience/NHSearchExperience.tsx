@@ -6,14 +6,21 @@ import styles from "./NHSearchExperience.module.css";
 import DefaultSearchPrompt from "./DefaultSearchPrompt";
 import ActiveSearchCanvas from "./ActiveSearchCanvas";
 import SearchResultsCanvas from "./SearchResultsCanvas";
+import SkeletonResultsCanvas from "./SkeletonResultsCanvas";
 import { 
-  getLiveSuggestions, 
   getSearchResults, 
   SearchResultsData, 
-  CARDIOLOGY_SEARCH_RESULTS 
+  CARDIOLOGY_RESULTS 
 } from "./searchData";
 
-export type SearchState = "landing" | "active" | "results";
+/**
+ * Formal Search Experience State Machine:
+ * - 'landing': Neutral default floating prompt integrated in homepage hero
+ * - 'active': Expanded canvas (State 2) — empty waiting to type OR live predictive sentence completion
+ * - 'skeleton': Short 600-900ms AI inference loading simulation showing doctor/category skeletons
+ * - 'results': Full search results canvas with doctors, treatments, articles, and tags
+ */
+export type SearchState = "landing" | "active" | "skeleton" | "results";
 
 export interface NHSearchExperienceProps {
   /** Optional callback to notify parent hero (e.g. to dim video or slide headlines) */
@@ -31,18 +38,22 @@ export interface NHSearchExperienceProps {
  * Narayana Health Unified Search Experience
  * ═════════════════════════════════════════════════════════════════════════════════
  *
- * A single continuous interactive surface transitioning smoothly across 3 states:
+ * A single continuous interactive surface transitioning smoothly across states:
  *
- *   STATE 01: 'landing'  → Neutral default floating dark glass prompt
- *   STATE 02: 'active'   → Expanded canvas with live query autocomplete & intelligence
- *   STATE 03: 'results'  → Full results canvas (Doctors, Treatments, Articles, Tags)
+ *   STATE 01: 'landing'   → Neutral default floating dark glass prompt
+ *   STATE 02: 'active'    → Expanded canvas:
+ *                           - Empty State: location, controls, subtle prompt (NO results/doctors)
+ *                           - Typing State: Live predictive ghost sentence completion + suggestions
+ *   STATE 03: 'skeleton'  → Pulse AI inference loading state (~750ms) with animated skeletons
+ *   STATE 04: 'results'   → Full results canvas (Doctors, Treatments, Articles, Tags)
  *
- * DEVELOPER HANDOFF INSTRUCTIONS:
- * 1. State transitions are controlled via the `searchState` variable ('landing' | 'active' | 'results').
- * 2. Autocomplete suggestions are fetched in `handleQueryChange()` via `getLiveSuggestions()`.
- * 3. Final search results are loaded in `handleSubmit()` via `getSearchResults(query, location)`.
- * 4. To connect your production backend, replace `getLiveSuggestions` and `getSearchResults`
- *    in `searchData.ts` with your live API client.
+ * DEVELOPER HANDOFF & API INTEGRATION POINT:
+ * 1. State machine: 'landing' → 'active' → 'skeleton' → 'results'.
+ * 2. Predictive logic: Managed in `searchData.ts` (`getPredictiveCompletion()`).
+ *    Replace with your live Pulse AI sentence completion / NLP query parser endpoint.
+ * 3. Results fetching: Handled in `handleSubmit()` via `getSearchResults()`.
+ *    Replace `getSearchResults()` with your OpenSearch / Clinical Graph API.
+ * 4. All UI components are native React/CSS Modules, following layout references 01, 02, 03.
  */
 export default function NHSearchExperience({
   onOpenChange,
@@ -59,8 +70,7 @@ export default function NHSearchExperience({
   const [activePill, setActivePill] = useState<"doctor" | "symptoms" | null>(null);
 
   // Suggestions & Results
-  const [suggestions, setSuggestions] = useState<string[]>(() => getLiveSuggestions(""));
-  const [resultsData, setResultsData] = useState<SearchResultsData>(CARDIOLOGY_SEARCH_RESULTS);
+  const [resultsData, setResultsData] = useState<SearchResultsData>(CARDIOLOGY_RESULTS);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -81,28 +91,31 @@ export default function NHSearchExperience({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [searchState]);
 
-  // Handle Query typing & live suggestions update
+  // Handle Query typing
   const handleQueryChange = useCallback((newQuery: string) => {
     setQuery(newQuery);
-    const newSuggestions = getLiveSuggestions(newQuery);
-    setSuggestions(newSuggestions);
   }, []);
 
   // Activate search (Landing → Active)
   const handleActivate = () => {
     setSearchState("active");
-    if (!query) {
-      setSuggestions(getLiveSuggestions(""));
-    }
   };
 
-  // Submit query (Active → Results)
+  // Submit query (Active → Skeleton Loading → Results)
   const handleSubmit = async (searchQuery: string) => {
     const targetQuery = searchQuery.trim() || "I have chest pain and need a doctor";
     setQuery(targetQuery);
     
-    // Resolve search results
-    const results = await getSearchResults(targetQuery, selectedLocation);
+    // Step 1: Immediately transition to realistic skeleton state
+    setSearchState("skeleton");
+    
+    // Step 2: Realistic AI matching delay (750ms)
+    const [results] = await Promise.all([
+      getSearchResults(targetQuery, selectedLocation),
+      new Promise((resolve) => setTimeout(resolve, 750)),
+    ]);
+
+    // Step 3: Smoothly reveal final results
     setResultsData(results);
     setSearchState("results");
   };
@@ -123,11 +136,9 @@ export default function NHSearchExperience({
     setActivePill(pill);
     setSearchState("active");
     if (pill === "doctor") {
-      setQuery("Find a doctor in Bangalore");
-      setSuggestions(getLiveSuggestions("doctor"));
+      setQuery("Find a doctor");
     } else {
       setQuery("I have chest pain");
-      setSuggestions(getLiveSuggestions("chest"));
     }
   };
 
@@ -146,7 +157,8 @@ export default function NHSearchExperience({
     }
   };
 
-  // Class mapping based on state
+  // Class mapping based on state:
+  // Note: 'skeleton' and 'results' both use .stateResults so the canvas expands smoothly
   const stateClass = 
     searchState === "landing"
       ? styles.stateLanding
@@ -208,8 +220,6 @@ export default function NHSearchExperience({
               <ActiveSearchCanvas
                 query={query}
                 onQueryChange={handleQueryChange}
-                suggestions={suggestions}
-                onSelectSuggestion={handleSubmit}
                 onSubmit={handleSubmit}
                 onClose={handleClose}
                 selectedLocation={selectedLocation}
@@ -217,6 +227,18 @@ export default function NHSearchExperience({
                 activePill={activePill}
                 onSelectActionPill={handleSelectActionPill}
               />
+            </motion.div>
+          )}
+
+          {searchState === "skeleton" && (
+            <motion.div
+              key="skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <SkeletonResultsCanvas query={query} />
             </motion.div>
           )}
 

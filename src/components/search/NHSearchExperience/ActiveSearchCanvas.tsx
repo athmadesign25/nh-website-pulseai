@@ -3,16 +3,14 @@
 import React, { useRef, useEffect, useState } from "react";
 import { 
   Paperclip, Mic, ArrowRight, X, MapPin, ChevronDown, 
-  User, Stethoscope, Sparkles 
+  User, Stethoscope, Sparkles, CornerDownLeft, Command
 } from "lucide-react";
 import styles from "./NHSearchExperience.module.css";
-import { NH_LOCATIONS } from "./searchData";
+import { NH_LOCATIONS, PredictiveState, getPredictiveCompletion } from "./searchData";
 
 interface ActiveSearchCanvasProps {
   query: string;
   onQueryChange: (val: string) => void;
-  suggestions: string[];
-  onSelectSuggestion: (query: string) => void;
   onSubmit: (query: string) => void;
   onClose: () => void;
   selectedLocation: string;
@@ -24,8 +22,6 @@ interface ActiveSearchCanvasProps {
 export default function ActiveSearchCanvas({
   query,
   onQueryChange,
-  suggestions,
-  onSelectSuggestion,
   onSubmit,
   onClose,
   selectedLocation,
@@ -35,10 +31,15 @@ export default function ActiveSearchCanvas({
 }: ActiveSearchCanvasProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  const [selectedSugIndex, setSelectedSugIndex] = useState<number>(-1);
   const locationRef = useRef<HTMLDivElement>(null);
 
-  // Auto-focus input when entering active search
+  // Compute live predictive completion whenever user types
+  const prediction: PredictiveState | null = query.trim()
+    ? getPredictiveCompletion(query)
+    : null;
+
+  // Auto-focus input when opening
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -54,22 +55,40 @@ export default function ActiveSearchCanvas({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Keyboard handler for Tab completion, arrow navigation, enter submit
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Tab") {
+      // Tab accepts the inline predictive completion
+      if (prediction && prediction.fullText) {
+        e.preventDefault();
+        onQueryChange(prediction.fullText);
+      }
+    } else if (e.key === "ArrowRight" && inputRef.current) {
+      // Right arrow at end of text also accepts prediction
+      const atEnd = inputRef.current.selectionStart === query.length;
+      if (atEnd && prediction && prediction.fullText) {
+        e.preventDefault();
+        onQueryChange(prediction.fullText);
+      }
+    } else if (e.key === "Enter") {
       e.preventDefault();
-      if (selectedIndex >= 0 && suggestions[selectedIndex]) {
-        onSubmit(suggestions[selectedIndex]);
+      if (prediction && selectedSugIndex >= 0 && prediction.suggestions[selectedSugIndex]) {
+        onSubmit(prediction.suggestions[selectedSugIndex]);
       } else if (query.trim()) {
         onSubmit(query.trim());
-      } else if (suggestions.length > 0) {
-        onSubmit(suggestions[0]);
+      } else if (prediction && prediction.fullText) {
+        onSubmit(prediction.fullText);
       }
-    } else if (e.key === "ArrowDown") {
+    } else if (e.key === "ArrowDown" && prediction) {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
-    } else if (e.key === "ArrowUp") {
+      setSelectedSugIndex((prev) =>
+        prev < prediction.suggestions.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === "ArrowUp" && prediction) {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+      setSelectedSugIndex((prev) =>
+        prev > 0 ? prev - 1 : prediction.suggestions.length - 1
+      );
     } else if (e.key === "Escape") {
       e.preventDefault();
       onClose();
@@ -77,33 +96,11 @@ export default function ActiveSearchCanvas({
   };
 
   /**
-   * Render suggestion text with match highlighting
+   * Accepts prediction and updates query
    */
-  const renderHighlightedText = (suggestion: string, currentQuery: string) => {
-    const cleanQuery = currentQuery.trim().toLowerCase();
-    if (!cleanQuery) return suggestion;
-
-    const lowerSug = suggestion.toLowerCase();
-    const matchIndex = lowerSug.indexOf(cleanQuery);
-    if (matchIndex === -1) {
-      return (
-        <span>
-          <strong>{suggestion}</strong>
-        </span>
-      );
-    }
-
-    const before = suggestion.slice(0, matchIndex);
-    const match = suggestion.slice(matchIndex, matchIndex + cleanQuery.length);
-    const after = suggestion.slice(matchIndex + cleanQuery.length);
-
-    return (
-      <span>
-        {before}
-        <span className={styles.highlightMatch}>{match}</span>
-        {after}
-      </span>
-    );
+  const handleAcceptPrediction = (fullText: string) => {
+    onQueryChange(fullText);
+    inputRef.current?.focus();
   };
 
   return (
@@ -122,7 +119,13 @@ export default function ActiveSearchCanvas({
             >
               <MapPin size={14} color="#FF6B6B" />
               <span>{selectedLocation}</span>
-              <ChevronDown size={13} style={{ transform: isLocationOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+              <ChevronDown
+                size={13}
+                style={{
+                  transform: isLocationOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 0.2s",
+                }}
+              />
             </button>
 
             {isLocationOpen && (
@@ -131,7 +134,9 @@ export default function ActiveSearchCanvas({
                   <button
                     key={loc}
                     type="button"
-                    className={`${styles.locationMenuItem} ${loc === selectedLocation ? styles.locationMenuItemSelected : ""}`}
+                    className={`${styles.locationMenuItem} ${
+                      loc === selectedLocation ? styles.locationMenuItemSelected : ""
+                    }`}
                     onClick={() => {
                       onSelectLocation(loc);
                       setIsLocationOpen(false);
@@ -166,25 +171,43 @@ export default function ActiveSearchCanvas({
         </button>
       </div>
 
-      {/* Input Row: Paperclip, Active Input, Mic, Submit Arrow */}
+      {/* Input Row with Live Predictive Sentence Ghost Overlay */}
       <div className={styles.activeInputRow}>
         <button type="button" className={styles.iconControlBtn} aria-label="Attach medical records or file">
           <Paperclip size={20} />
         </button>
 
-        <input
-          ref={inputRef}
-          type="text"
-          className={styles.activeTextInput}
-          value={query}
-          onChange={(e) => {
-            onQueryChange(e.target.value);
-            setSelectedIndex(-1);
-          }}
-          onKeyDown={handleKeyDown}
-          placeholder="I have chest pain"
-          aria-label="Search healthcare conditions, symptoms or doctors"
-        />
+        <div className={styles.inputGhostWrapper}>
+          {/* Real interactive input */}
+          <input
+            ref={inputRef}
+            type="text"
+            className={styles.activeTextInput}
+            value={query}
+            onChange={(e) => {
+              onQueryChange(e.target.value);
+              setSelectedSugIndex(-1);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Type symptoms or conditions, e.g. 'c' for chest or 'knee'..."
+            aria-label="Search symptoms, conditions or doctors"
+            autoComplete="off"
+            spellCheck="false"
+          />
+
+          {/* Inline ghost predictive sentence overlay */}
+          {prediction && query.length > 0 && (
+            <div
+              className={styles.ghostTextOverlay}
+              onClick={() => handleAcceptPrediction(prediction.fullText)}
+              title="Click or press Tab to complete"
+            >
+              <span className={styles.ghostInvisibleTyped}>{query}</span>
+              <span className={styles.ghostSuffix}>{prediction.suffix}</span>
+              <span className={styles.tabBadge}>Tab ⇥</span>
+            </div>
+          )}
+        </div>
 
         <button type="button" className={styles.iconControlBtn} aria-label="Voice search">
           <Mic size={20} />
@@ -195,8 +218,13 @@ export default function ActiveSearchCanvas({
           className={styles.submitArrowBtn}
           aria-label="Submit search"
           onClick={() => {
-            if (query.trim()) onSubmit(query.trim());
-            else if (suggestions.length > 0) onSubmit(suggestions[0]);
+            if (prediction && selectedSugIndex >= 0) {
+              onSubmit(prediction.suggestions[selectedSugIndex]);
+            } else if (query.trim()) {
+              onSubmit(query.trim());
+            } else if (prediction) {
+              onSubmit(prediction.fullText);
+            }
           }}
         >
           <ArrowRight size={18} strokeWidth={2.5} />
@@ -227,35 +255,76 @@ export default function ActiveSearchCanvas({
         </button>
       </div>
 
-      {/* SUGGESTED QUERIES Section */}
-      <div className={styles.suggestionsSection}>
-        <div className={styles.suggestionsHeader}>SUGGESTED QUERIES</div>
-
-        <div className={styles.suggestionsList} role="listbox">
-          {suggestions.map((sug, idx) => (
+      {/* ── STATE 2: EMPTY CANVAS (When user has not typed yet) ── */}
+      {!prediction && query.trim().length === 0 && (
+        <div className={styles.emptyCanvasPrompt}>
+          <div className={styles.emptyPromptTitle}>
+            <Sparkles size={16} className={styles.sparkleIcon} />
+            <span>Search Narayana Health's clinical network</span>
+          </div>
+          <p className={styles.emptyPromptSub}>
+            Start typing any symptom, specialty or procedure. Try typing{" "}
             <button
-              key={sug}
               type="button"
-              className={`${styles.suggestionItem} ${selectedIndex === idx ? styles.suggestionItemActive : ""}`}
-              onClick={() => onSelectSuggestion(sug)}
-              onMouseEnter={() => setSelectedIndex(idx)}
-              role="option"
-              aria-selected={selectedIndex === idx}
+              className={styles.sampleKeywordBtn}
+              onClick={() => onQueryChange("c")}
             >
-              <ArrowRight size={15} className={styles.suggestionArrow} />
-              <span className={styles.suggestionText}>
-                {renderHighlightedText(sug, query)}
-              </span>
-            </button>
-          ))}
+              &ldquo;c&rdquo;
+            </button>{" "}
+            for chest pain, or{" "}
+            <button
+              type="button"
+              className={styles.sampleKeywordBtn}
+              onClick={() => onQueryChange("knee")}
+            >
+              &ldquo;knee&rdquo;
+            </button>{" "}
+            for joint care.
+          </p>
         </div>
-      </div>
+      )}
 
-      {/* Subtle Pulse AI Intelligence Status */}
-      <div className={styles.pulseStatusRow}>
-        <Sparkles size={16} className={styles.sparkleIcon} />
-        <span>Intelligently preparing matches…</span>
-      </div>
+      {/* ── LIVE PREDICTIVE SECTION (When user types any character) ── */}
+      {prediction && (
+        <div className={styles.suggestionsSection}>
+          <div className={styles.suggestionsHeaderRow}>
+            <span className={styles.suggestionsHeader}>SUGGESTED PREDICTIONS</span>
+            <span className={styles.intentTagBadge}>
+              {prediction.intentLabel}
+            </span>
+          </div>
+
+          <div className={styles.suggestionsList} role="listbox">
+            {prediction.suggestions.map((sug, idx) => (
+              <button
+                key={sug}
+                type="button"
+                className={`${styles.suggestionItem} ${
+                  selectedSugIndex === idx ? styles.suggestionItemActive : ""
+                }`}
+                onClick={() => onSubmit(sug)}
+                onMouseEnter={() => setSelectedSugIndex(idx)}
+                role="option"
+                aria-selected={selectedSugIndex === idx}
+              >
+                <ArrowRight size={15} className={styles.suggestionArrow} />
+                <span className={styles.suggestionText}>
+                  {sug}
+                </span>
+                <span className={styles.pressEnterHint}>
+                  <CornerDownLeft size={12} />
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Pulse AI Status */}
+          <div className={styles.pulseStatusRow}>
+            <Sparkles size={16} className={styles.sparkleIcon} />
+            <span>Intelligently preparing matches…</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

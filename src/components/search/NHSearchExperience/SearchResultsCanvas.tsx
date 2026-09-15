@@ -4,7 +4,8 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { 
   Search, X, MapPin, ChevronDown, ArrowRight, 
-  Heart, Activity, Stethoscope, FileText, AlertCircle, BookOpen 
+  Heart, Activity, Stethoscope, FileText, AlertCircle, BookOpen,
+  Bone, Scan 
 } from "lucide-react";
 import styles from "./NHSearchExperience.module.css";
 import { 
@@ -55,6 +56,10 @@ export default function SearchResultsCanvas({
         return <Activity size={18} />;
       case "angiography":
         return <Heart size={18} color="#FF6B6B" />;
+      case "joint":
+        return <Bone size={18} color="#38BDF8" />;
+      case "xray":
+        return <Scan size={18} color="#38BDF8" />;
       case "stethoscope":
       default:
         return <Stethoscope size={18} />;

@@ -333,8 +333,16 @@
   width: 100%;
 }
 
-.activeTextInput {
+.inputGhostWrapper {
+  position: relative;
   flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.activeTextInput {
+  width: 100%;
   background: transparent;
   border: none;
   outline: none;
@@ -344,11 +352,78 @@
   color: #FFFFFF;
   line-height: 1.4;
   caret-color: #00C4FF;
+  position: relative;
+  z-index: 2;
 }
 
 .activeTextInput::placeholder {
   color: #64748B;
   font-weight: 400;
+}
+
+/* ── Inline Ghost Predictive Sentence Overlay ── */
+.ghostTextOverlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.4;
+  user-select: none;
+  white-space: pre;
+  z-index: 1;
+}
+
+.ghostInvisibleTyped {
+  color: transparent;
+  opacity: 0;
+}
+
+.ghostSuffix {
+  color: #94A3B8;
+  opacity: 0.8;
+  letter-spacing: normal;
+  transition: opacity 0.15s ease;
+}
+
+.ghostTextOverlay:hover .ghostSuffix {
+  color: #CBD5E1;
+  opacity: 1;
+}
+
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #38BDF8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  letter-spacing: 0.02em;
+  user-select: none;
+  animation: tabBadgePulse 2s infinite ease-in-out;
+}
+
+@keyframes tabBadgePulse {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+    background: rgba(56, 189, 248, 0.22);
+  }
 }
 
 .activePillsRow {
@@ -358,8 +433,78 @@
   margin-top: 4px;
 }
 
+/* ── Empty State Canvas (Before Typing) ── */
+.emptyCanvasPrompt {
+  margin-top: 20px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeInEmpty 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInEmpty {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.emptyPromptTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #F1F5F9;
+}
+
+.emptyPromptSub {
+  font-size: 12.5px;
+  color: #94A3B8;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.sampleKeywordBtn {
+  background: rgba(3, 78, 162, 0.25);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38BDF8;
+  padding: 1px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.2s;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+.sampleKeywordBtn:hover {
+  background: rgba(3, 78, 162, 0.5);
+  border-color: #38BDF8;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+/* ── Live Predictions Section ── */
 .suggestionsSection {
   margin-top: 22px;
+}
+
+.suggestionsHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
 .suggestionsHeader {
@@ -368,7 +513,17 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #8B9BB4;
-  margin-bottom: 12px;
+}
+
+.intentTagBadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #38BDF8;
+  background: rgba(3, 78, 162, 0.25);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 2px 9px;
+  border-radius: 9999px;
+  letter-spacing: 0.03em;
 }
 
 .suggestionsList {
@@ -407,6 +562,19 @@
 
 .suggestionText {
   flex: 1;
+}
+
+.pressEnterHint {
+  display: flex;
+  align-items: center;
+  color: #64748B;
+  opacity: 0.7;
+  margin-left: auto;
+}
+
+.suggestionItem:hover .pressEnterHint {
+  color: #38BDF8;
+  opacity: 1;
 }
 
 .highlightMatch {
@@ -848,6 +1016,63 @@
 .secondaryItemCard:hover .itemArrow {
   color: #FFFFFF;
   transform: translateX(3px);
+}
+
+/* ── Skeleton Loading State Styles ── */
+.shimmer {
+  background: linear-gradient(
+    90deg, 
+    rgba(255, 255, 255, 0.04) 25%, 
+    rgba(255, 255, 255, 0.12) 50%, 
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmerPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes shimmerPulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeletonPill {
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.skeletonCircle {
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.skeletonBar {
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.skeletonDoctorCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.skeletonSecondaryCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* ── Responsive Viewports ── */

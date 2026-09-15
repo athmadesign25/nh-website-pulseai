@@ -1,14 +1,26 @@
 /**
- * Narayana Health Unified Search Experience - Sample Dataset & Query Matcher
+ * ═════════════════════════════════════════════════════════════════════════════════
+ * NARAYANA HEALTH SEARCH DATA & PREDICTIVE INTELLIGENCE CONFIG
+ * ═════════════════════════════════════════════════════════════════════════════════
  *
- * DEVELOPER HANDOFF NOTE:
- * This file models the data structures for:
- * 1. Query autocomplete suggestions (State 02)
- * 2. Search result payloads (State 03) including doctors, treatments, articles, and related tags.
+ * DEVELOPER HANDOFF INSTRUCTIONS:
+ * 
+ * 1. DEMO SEARCH SCENARIOS:
+ *    - Scenario 1 (Cardiology):
+ *      User types: 'c' → 'ch' → 'chest' → 'chest pain'
+ *      Predictive completion: "I have chest pain and need a doctor"
+ *      Results: Cardiologists in Bangalore + cardiac procedures & articles
  *
- * TO CONNECT PRODUCTION APIS:
- * Replace or augment `getLiveSuggestions()` and `getSearchResults()` with live calls
- * to your backend search endpoint (e.g. `/api/search` or Elasticsearch/Algolia instance).
+ *    - Scenario 2 (Orthopaedics):
+ *      User types: 'k' → 'kn' → 'knee' → 'knee pain'
+ *      Predictive completion: "I have knee pain and need an orthopaedic doctor"
+ *      Results: Recommended Orthopaedic Doctors in Bangalore + joint care
+ *
+ * 2. API INTEGRATION POINT:
+ *    - For live predictive completion: Replace `getPredictiveCompletion()` with a call
+ *      to your autocomplete / query suggestion service.
+ *    - For search results: Replace `getSearchResults()` with a call to your live
+ *      healthcare search backend (OpenSearch / Elasticsearch / Pulse AI API).
  */
 
 export interface DoctorCardData {
@@ -26,7 +38,7 @@ export interface TreatmentItemData {
   id: string;
   title: string;
   subtitle: string;
-  iconType: "heart" | "activity" | "angiography" | "stethoscope";
+  iconType: "heart" | "activity" | "angiography" | "stethoscope" | "joint" | "xray";
 }
 
 export interface ArticleItemData {
@@ -47,6 +59,18 @@ export interface SearchResultsData {
   articles: ArticleItemData[];
 }
 
+export interface PredictiveState {
+  /** The full suggested completion sentence */
+  fullText: string;
+  /** Suffix remaining after the user's typed text (for inline ghost styling) */
+  suffix: string;
+  /** List of alternative sentence / query predictions */
+  suggestions: string[];
+  /** Inferred healthcare intent */
+  intent: "cardiology" | "orthopaedics" | "general";
+  intentLabel: string;
+}
+
 export const NH_LOCATIONS = [
   "Bangalore",
   "Delhi NCR",
@@ -59,71 +83,185 @@ export const NH_LOCATIONS = [
   "Shimoga",
 ];
 
-// Sample Query Suggestion Bank
-const SUGGESTION_BANK: string[] = [
-  "I have chest pain",
-  "chest pain causes",
-  "chest pain doctor near me",
-  "chest tightness and breathing difficulty",
-  "cardiology consultation",
-  "cardiologist near me",
-  "cancer care specialist",
-  "coronary artery disease",
-  "cardiac health checkup",
-  "neurology consultation",
-  "orthopaedic surgeon near me",
-  "pediatrician in Bangalore",
-  "gastroenterologist appointment",
-  "diabetic care clinic",
-  "knee replacement surgery",
-  "spine consultation",
-];
-
 /**
- * Returns dynamic query suggestions based on user input.
- * When query is empty or short, returns curated suggestions based on location.
+ * Live predictive sentence completion logic.
+ * Returns both the inline completion suffix and a list of secondary query predictions.
  */
-export function getLiveSuggestions(query: string): string[] {
-  const clean = query.trim().toLowerCase();
-  if (!clean) {
-    return [
-      "I have chest pain",
-      "cardiologist near me",
-      "cardiac consultation",
-      "chest pain causes",
-    ];
+export function getPredictiveCompletion(typedText: string): PredictiveState | null {
+  const clean = typedText.trim().toLowerCase();
+  if (!clean) return null;
+
+  // ── DEMO SEARCH 1: Cardiology Progression ('c' / 'ch' / 'chest') ──
+  if (clean === "c") {
+    return {
+      fullText: "can I help you find a cardiologist?",
+      suffix: "an I help you find a cardiologist?",
+      suggestions: [
+        "I have chest pain and need a doctor",
+        "can I help you find a cardiologist?",
+        "chest pain causes and emergency signs",
+        "cardiology consultation in Bangalore",
+      ],
+      intent: "cardiology",
+      intentLabel: "Cardiology & Chest Care",
+    };
   }
 
-  // Matches starting with or containing query
-  const matches = SUGGESTION_BANK.filter((s) =>
-    s.toLowerCase().includes(clean)
-  );
-
-  // If specific healthcare keywords typed, ensure top clinical queries appear
-  if (clean.startsWith("c")) {
-    const prioritized = [
-      "I have chest pain",
-      "chest pain causes",
-      "chest pain doctor near me",
-      "cardiology consultation",
-      "cardiologist near me",
-    ];
-    return Array.from(new Set([...prioritized, ...matches])).slice(0, 5);
+  if (clean === "ch") {
+    return {
+      fullText: "chest pain — find the right specialist",
+      suffix: "est pain — find the right specialist",
+      suggestions: [
+        "I have chest pain and need a doctor",
+        "chest pain — find the right specialist",
+        "chest pain doctor near me",
+        "chest tightness and breathing difficulty",
+      ],
+      intent: "cardiology",
+      intentLabel: "Cardiac Care",
+    };
   }
 
-  return matches.length > 0
-    ? matches.slice(0, 5)
-    : [
-        `${query} specialists`,
-        `${query} symptoms and treatment`,
-        `${query} doctors near me`,
-      ];
+  if (clean.startsWith("chest p") || clean === "chest pain") {
+    return {
+      fullText: "I have chest pain and need a doctor",
+      suffix: clean === "chest pain" ? " and need a doctor" : "ain and need a doctor",
+      suggestions: [
+        "I have chest pain and need a doctor",
+        "chest pain doctor near me",
+        "chest pain causes and diagnosis",
+        "chest pain clinic in Bangalore",
+      ],
+      intent: "cardiology",
+      intentLabel: "Cardiology",
+    };
+  }
+
+  if (clean.startsWith("chest")) {
+    return {
+      fullText: "chest pain — find a cardiologist near you",
+      suffix: " pain — find a cardiologist near you",
+      suggestions: [
+        "I have chest pain and need a doctor",
+        "chest pain — find a cardiologist near you",
+        "chest pain causes and diagnosis",
+        "chest pain doctor near me",
+      ],
+      intent: "cardiology",
+      intentLabel: "Cardiology",
+    };
+  }
+
+  if (clean.startsWith("cardio") || clean.startsWith("heart")) {
+    return {
+      fullText: "cardiology consultation with top heart specialists",
+      suffix: clean.startsWith("cardio") ? "logy consultation with top heart specialists" : " specialist in Bangalore",
+      suggestions: [
+        "I have chest pain and need a doctor",
+        "cardiology consultation in Bangalore",
+        "heart specialist near me",
+        "preventive cardiac checkup package",
+      ],
+      intent: "cardiology",
+      intentLabel: "Cardiology",
+    };
+  }
+
+  // ── DEMO SEARCH 2: Orthopaedics Progression ('k' / 'kn' / 'knee') ──
+  if (clean === "k") {
+    return {
+      fullText: "knee pain — find the right specialist",
+      suffix: "nee pain — find the right specialist",
+      suggestions: [
+        "I have knee pain and need an orthopaedic doctor",
+        "knee pain — find the right specialist",
+        "knee replacement surgeon in Bangalore",
+        "knee pain causes and home exercises",
+      ],
+      intent: "orthopaedics",
+      intentLabel: "Orthopaedic Care",
+    };
+  }
+
+  if (clean === "kn") {
+    return {
+      fullText: "knee pain — find an orthopaedic doctor",
+      suffix: "ee pain — find an orthopaedic doctor",
+      suggestions: [
+        "I have knee pain and need an orthopaedic doctor",
+        "knee pain — find an orthopaedic doctor",
+        "knee arthroscopy specialist",
+        "knee joint swelling and pain relief",
+      ],
+      intent: "orthopaedics",
+      intentLabel: "Orthopaedics",
+    };
+  }
+
+  if (clean.startsWith("knee p") || clean === "knee pain") {
+    return {
+      fullText: "I have knee pain and need an orthopaedic doctor",
+      suffix: clean === "knee pain" ? " and need an orthopaedic doctor" : "ain and need an orthopaedic doctor",
+      suggestions: [
+        "I have knee pain and need an orthopaedic doctor",
+        "knee pain doctor near me",
+        "knee pain assessment and MRI",
+        "knee replacement consultation",
+      ],
+      intent: "orthopaedics",
+      intentLabel: "Orthopaedics & Joint Care",
+    };
+  }
+
+  if (clean.startsWith("knee")) {
+    return {
+      fullText: "knee pain — find an orthopaedic specialist near you",
+      suffix: " pain — find an orthopaedic specialist near you",
+      suggestions: [
+        "I have knee pain and need an orthopaedic doctor",
+        "knee pain — find an orthopaedic specialist near you",
+        "knee replacement surgery options",
+        "knee doctor near me in Bangalore",
+      ],
+      intent: "orthopaedics",
+      intentLabel: "Orthopaedics",
+    };
+  }
+
+  if (clean.startsWith("ortho") || clean.startsWith("joint") || clean.startsWith("bone")) {
+    return {
+      fullText: "orthopaedic doctor for joint and bone consultation",
+      suffix: clean.startsWith("ortho") ? "paedic doctor for joint and bone consultation" : " specialist near me",
+      suggestions: [
+        "I have knee pain and need an orthopaedic doctor",
+        "orthopaedic consultation in Bangalore",
+        "joint replacement surgeon near me",
+        "bone and joint injury clinic",
+      ],
+      intent: "orthopaedics",
+      intentLabel: "Orthopaedics",
+    };
+  }
+
+  // ── GENERAL FALLBACK PREDICTION ──
+  return {
+    fullText: `${typedText} specialist consultation near you`,
+    suffix: " specialist consultation near you",
+    suggestions: [
+      `${typedText} specialist in Bangalore`,
+      `${typedText} symptoms and diagnosis`,
+      `${typedText} doctor appointment today`,
+    ],
+    intent: "general",
+    intentLabel: "Clinical Care",
+  };
 }
 
-/**
- * Default search results data modelled after Reference 03 ("Active search result.png")
- */
-export const CARDIOLOGY_SEARCH_RESULTS: SearchResultsData = {
+// ═══════════════════════════════════════════════════════════════════════════════
+// RESULTS DATASETS FOR BOTH DEMO SCENARIOS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const CARDIOLOGY_RESULTS: SearchResultsData = {
   categoryTitle: "Cardiologists in Bangalore",
   matchCountText: "24 doctors match your search",
   pulseRecommendationText: "Get customise recommendation with Pulse ai",
@@ -221,112 +359,137 @@ export const CARDIOLOGY_SEARCH_RESULTS: SearchResultsData = {
   ],
 };
 
+export const ORTHOPAEDICS_RESULTS: SearchResultsData = {
+  categoryTitle: "Recommended Orthopaedic Doctors in Bangalore",
+  matchCountText: "16 doctors match your search",
+  pulseRecommendationText: "Get customise recommendation with Pulse ai",
+  doctors: [
+    {
+      id: "doc-prakash",
+      name: "Dr. Prakash Gupta",
+      speciality: "Senior Consultant - Orthopaedics & Joint Replacement",
+      hospital: "Narayana Multispeciality, Bangalore",
+      experience: "16 years ·",
+      image: "/assets/doctor_2.png",
+      city: "Bangalore",
+      availableToday: true,
+    },
+    {
+      id: "doc-rohan",
+      name: "Dr. Rohan Varma",
+      speciality: "Consultant - Arthroscopy & Sports Medicine",
+      hospital: "Narayana Health City, Bangalore",
+      experience: "13 years ·",
+      image: "/assets/doctor_avatar_male.png",
+      city: "Bangalore",
+      availableToday: true,
+    },
+    {
+      id: "doc-sanjay",
+      name: "Dr. Sanjay Rao",
+      speciality: "Director - Robotic Joint Replacement Surgery",
+      hospital: "Narayana Institute of Orthopaedics",
+      experience: "22+ years ·",
+      image: "/assets/doctor_3.png",
+      city: "Bangalore",
+      availableToday: true,
+    },
+    {
+      id: "doc-meera",
+      name: "Dr. Meera Nambiar",
+      speciality: "Consultant - Pediatric & Adult Orthopaedics",
+      hospital: "Narayana Multispeciality",
+      experience: "11 years ·",
+      image: "/assets/doctor_avatar_female.png",
+      city: "Bangalore",
+      availableToday: true,
+    },
+  ],
+  relatedSpecialties: [
+    "Orthopaedics",
+    "Joint Replacement",
+    "Knee Arthroscopy",
+    "Knee Clinic",
+    "Sports Medicine",
+    "Physiotherapy & Rehab",
+  ],
+  treatments: [
+    {
+      id: "t-ortho-1",
+      title: "Orthopaedic consultation",
+      subtitle: "Specialist joint & bone assessment",
+      iconType: "joint",
+    },
+    {
+      id: "t-ortho-2",
+      title: "Knee pain assessment",
+      subtitle: "Comprehensive clinical evaluation",
+      iconType: "stethoscope",
+    },
+    {
+      id: "t-ortho-3",
+      title: "Knee replacement surgery",
+      subtitle: "Advanced robotic-assisted procedure",
+      iconType: "joint",
+    },
+    {
+      id: "t-ortho-4",
+      title: "Digital X-ray & Knee MRI",
+      subtitle: "High resolution joint imaging",
+      iconType: "xray",
+    },
+  ],
+  articles: [
+    {
+      id: "a-ortho-1",
+      title: "Understanding knee pain: causes & home care",
+      readTime: "6 min read",
+      category: "Joint health",
+      iconType: "document",
+    },
+    {
+      id: "a-ortho-2",
+      title: "When to see an orthopaedic doctor for knee pain",
+      readTime: "5 min read",
+      category: "Orthopaedics",
+      iconType: "emergency",
+    },
+    {
+      id: "a-ortho-3",
+      title: "Robotic knee replacement: modern surgical recovery",
+      readTime: "8 min read",
+      category: "Joint Care",
+      iconType: "article",
+    },
+  ],
+};
+
 /**
- * Resolves search results for a given query & location.
- * In a real production environment, this is replaced by your search API call.
+ * Returns structured search results based on query & location.
  */
 export async function getSearchResults(
   query: string,
   location: string = "Bangalore"
 ): Promise<SearchResultsData> {
-  // Simulate rapid realistic response
-  await new Promise((resolve) => setTimeout(resolve, 80));
-
   const clean = query.toLowerCase();
 
-  // If query specifies neurology or brain
-  if (clean.includes("neuro") || clean.includes("brain") || clean.includes("headache")) {
+  // If query is related to knee / orthopaedics / bone / joint
+  if (
+    clean.includes("knee") ||
+    clean.includes("ortho") ||
+    clean.includes("joint") ||
+    clean.includes("bone") ||
+    clean.startsWith("k")
+  ) {
     return {
-      categoryTitle: `Neurologists in ${location}`,
-      matchCountText: "18 doctors match your search",
-      pulseRecommendationText: "Get customise recommendation with Pulse ai",
-      doctors: [
-        {
-          id: "doc-neuro-1",
-          name: "Dr. Ravi Shankar",
-          speciality: "Senior Consultant - Neurology",
-          hospital: "Narayana Institute of Neurosciences",
-          experience: "16 years ·",
-          image: "/assets/doctor_3.png",
-          city: location,
-        },
-        {
-          id: "doc-neuro-2",
-          name: "Dr. Priya Sharma",
-          speciality: "Consultant - Pediatric Neurology",
-          hospital: "Mazumdar Shaw Medical Centre",
-          experience: "14 years ·",
-          image: "/assets/doctor_avatar_female.png",
-          city: location,
-        },
-        {
-          id: "doc-neuro-3",
-          name: "Dr. Arun Krishnan",
-          speciality: "Director - Neurosurgery",
-          hospital: "Narayana Multispeciality",
-          experience: "20 years ·",
-          image: "/assets/doctor_2.png",
-          city: location,
-        },
-        {
-          id: "doc-neuro-4",
-          name: "Dr. Ananya Rao",
-          speciality: "Consultant - Neurology",
-          hospital: "Narayana Health City",
-          experience: "12 years ·",
-          image: "/assets/doctor_avatar_female.png",
-          city: location,
-        },
-      ],
-      relatedSpecialties: [
-        "Neurology",
-        "Neurosurgery",
-        "Brain MRI",
-        "Stroke Clinic",
-        "Headache Management",
-      ],
-      treatments: [
-        {
-          id: "t-neuro-1",
-          title: "Neurological Examination",
-          subtitle: "Clinical specialist assessment",
-          iconType: "activity",
-        },
-        {
-          id: "t-neuro-2",
-          title: "Brain MRI & EEG",
-          subtitle: "Advanced neuro-imaging",
-          iconType: "activity",
-        },
-        {
-          id: "t-neuro-3",
-          title: "Stroke Thrombolysis Protocol",
-          subtitle: "Emergency neuro-intervention",
-          iconType: "heart",
-        },
-      ],
-      articles: [
-        {
-          id: "a-neuro-1",
-          title: "Recognizing Early Signs of Stroke",
-          readTime: "6 min read",
-          category: "Neurology care",
-          iconType: "emergency",
-        },
-        {
-          id: "a-neuro-2",
-          title: "Migraine vs Tension Headache: Key Differences",
-          readTime: "5 min read",
-          category: "Brain health",
-          iconType: "article",
-        },
-      ],
+      ...ORTHOPAEDICS_RESULTS,
+      categoryTitle: `Recommended Orthopaedic Doctors in ${location}`,
     };
   }
 
-  // Default to cardiology / chest pain results matching Reference 03
+  // Default to cardiology results
   return {
-    ...CARDIOLOGY_SEARCH_RESULTS,
+    ...CARDIOLOGY_RESULTS,
     categoryTitle: `Cardiologists in ${location}`,
   };
 }
