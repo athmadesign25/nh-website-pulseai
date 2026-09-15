@@ -136,27 +136,127 @@
 }
 
 .stateActive {
+  width: min(880px, calc(100vw - 48px));
   max-width: 880px;
-  padding: 26px 32px 28px;
-  background: rgba(18, 24, 38, 0.94);
-  border-color: rgba(255, 255, 255, 0.18);
-  border-radius: 24px;
+  padding: 24px 28px 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(18, 24, 34, 0.48);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
   box-shadow: 
-    0 30px 70px -15px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.15),
-    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    0 24px 60px -15px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.16);
+  position: relative;
+  overflow: visible;
+}
+
+.stateActive::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 23px;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    rgba(0, 196, 255, 0.4) 0deg,
+    rgba(3, 78, 162, 0.5) 75deg,
+    rgba(237, 28, 36, 0.28) 150deg,
+    rgba(0, 196, 255, 0.12) 220deg,
+    rgba(3, 78, 162, 0.38) 290deg,
+    rgba(0, 196, 255, 0.4) 360deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotateBorderAngle 10s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.5;
+}
+
+.stateActive::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 26px;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    rgba(0, 196, 255, 0.1) 0deg,
+    rgba(3, 78, 162, 0.12) 75deg,
+    rgba(237, 28, 36, 0.06) 150deg,
+    rgba(0, 196, 255, 0.04) 220deg,
+    rgba(3, 78, 162, 0.08) 290deg,
+    rgba(0, 196, 255, 0.1) 360deg
+  );
+  filter: blur(12px);
+  -webkit-filter: blur(12px);
+  animation: rotateBorderAngle 10s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.4;
 }
 
 .stateResults {
+  width: min(1080px, calc(100vw - 48px));
   max-width: 1080px;
-  padding: 28px 36px 30px;
-  background: rgba(16, 22, 36, 0.96);
-  border-color: rgba(255, 255, 255, 0.18);
-  border-radius: 24px;
+  padding: 26px 32px 28px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(18, 24, 34, 0.55);
+  backdrop-filter: blur(32px) saturate(150%);
+  -webkit-backdrop-filter: blur(32px) saturate(150%);
   box-shadow: 
-    0 35px 80px -15px rgba(0, 0, 0, 0.75),
-    0 0 0 1px rgba(255, 255, 255, 0.15),
-    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    0 30px 70px -15px rgba(0, 0, 0, 0.55),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.16);
+  position: relative;
+  overflow: visible;
+}
+
+.stateResults::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 23px;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    rgba(0, 196, 255, 0.35) 0deg,
+    rgba(3, 78, 162, 0.45) 75deg,
+    rgba(237, 28, 36, 0.22) 150deg,
+    rgba(0, 196, 255, 0.1) 220deg,
+    rgba(3, 78, 162, 0.32) 290deg,
+    rgba(0, 196, 255, 0.35) 360deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotateBorderAngle 10s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.45;
+}
+
+.stateResults::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 26px;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    rgba(0, 196, 255, 0.08) 0deg,
+    rgba(3, 78, 162, 0.1) 75deg,
+    rgba(237, 28, 36, 0.05) 150deg,
+    rgba(0, 196, 255, 0.03) 220deg,
+    rgba(3, 78, 162, 0.06) 290deg,
+    rgba(0, 196, 255, 0.08) 360deg
+  );
+  filter: blur(12px);
+  -webkit-filter: blur(12px);
+  animation: rotateBorderAngle 10s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.35;
 }
 
 /* ── Top Header Row (Pulse AI badge, Location, Close) ── */
