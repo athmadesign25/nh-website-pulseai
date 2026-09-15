@@ -1,16 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { 
-  Search, X, MapPin, ChevronDown, ArrowRight, 
-  Heart, Activity, Stethoscope, FileText, AlertCircle, BookOpen,
-  Bone, Scan 
-} from "lucide-react";
+import { Search, X, MapPin, ChevronDown } from "lucide-react";
 import styles from "./NHSearchExperience.module.css";
-import { 
-  SearchResultsData, NH_LOCATIONS, TreatmentItemData, ArticleItemData 
-} from "./searchData";
+import { SearchResultsData, NH_LOCATIONS } from "./searchData";
+import PrimaryResults from "./PrimaryResults";
+import SecondaryResults from "./SecondaryResults";
+import TertiaryResults from "./TertiaryResults";
 
 interface SearchResultsCanvasProps {
   query: string;
@@ -47,38 +43,6 @@ export default function SearchResultsCanvas({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Icon renderer for treatments
-  const renderTreatmentIcon = (type: TreatmentItemData["iconType"]) => {
-    switch (type) {
-      case "heart":
-        return <Heart size={18} />;
-      case "activity":
-        return <Activity size={18} />;
-      case "angiography":
-        return <Heart size={18} color="#FF6B6B" />;
-      case "joint":
-        return <Bone size={18} color="#38BDF8" />;
-      case "xray":
-        return <Scan size={18} color="#38BDF8" />;
-      case "stethoscope":
-      default:
-        return <Stethoscope size={18} />;
-    }
-  };
-
-  // Icon renderer for articles
-  const renderArticleIcon = (type: ArticleItemData["iconType"]) => {
-    switch (type) {
-      case "emergency":
-        return <AlertCircle size={18} color="#FF6B6B" />;
-      case "article":
-        return <BookOpen size={18} />;
-      case "document":
-      default:
-        return <FileText size={18} />;
-    }
-  };
-
   return (
     <div className={styles.resultsContainer}>
       {/* Top Header Row: Location Pill + Pulse AI Badge + Close Button */}
@@ -94,7 +58,13 @@ export default function SearchResultsCanvas({
             >
               <MapPin size={14} color="#FF6B6B" />
               <span>{selectedLocation}</span>
-              <ChevronDown size={13} style={{ transform: isLocationOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+              <ChevronDown
+                size={13}
+                style={{
+                  transform: isLocationOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 0.2s",
+                }}
+              />
             </button>
 
             {isLocationOpen && (
@@ -103,7 +73,9 @@ export default function SearchResultsCanvas({
                   <button
                     key={loc}
                     type="button"
-                    className={`${styles.locationMenuItem} ${loc === selectedLocation ? styles.locationMenuItemSelected : ""}`}
+                    className={`${styles.locationMenuItem} ${
+                      loc === selectedLocation ? styles.locationMenuItemSelected : ""
+                    }`}
                     onClick={() => {
                       onSelectLocation(loc);
                       setIsLocationOpen(false);
@@ -157,156 +129,33 @@ export default function SearchResultsCanvas({
       {/* Red Horizon Divider */}
       <div className={styles.redDivider} />
 
-      {/* 2-Column Split Layout */}
+      {/* 2-Column Weighted Split Layout (Primary: 62%, Tertiary Right Rail: 38%) */}
       <div className={styles.resultsSplitLayout}>
-        {/* ── LEFT COLUMN: Doctors & Specialties (Primary) ── */}
+        {/* ── LEFT COLUMN: Dominant Primary Results & Secondary Related Care ── */}
         <div className={styles.resultsLeftCol}>
-          {/* Header Row: Category Title & Pulse AI card */}
-          <div className={styles.resultsCategoryHeader}>
-            <div>
-              <h2 className={styles.resultsCategoryTitle}>{results.categoryTitle}</h2>
-              <div className={styles.resultsCategorySub}>{results.matchCountText}</div>
-            </div>
+          {/* PRIMARY: Dominant Doctor Cards (60-65% width) */}
+          <PrimaryResults
+            categoryTitle={results.categoryTitle}
+            matchCountText={results.matchCountText}
+            pulseRecommendationText={results.pulseRecommendationText}
+            doctors={results.doctors}
+            selectedLocation={selectedLocation}
+            query={query}
+            onAskPulse={onAskPulse}
+          />
 
-            {/* Pulse AI Recommendation badge card */}
-            <div className={styles.pulseAiCard}>
-              <span className={styles.pulseAiCardText}>{results.pulseRecommendationText}</span>
-              <button
-                type="button"
-                className={styles.askPulseBtn}
-                onClick={onAskPulse}
-              >
-                Ask Pulse
-              </button>
-            </div>
-          </div>
-
-          {/* 2-Column Doctor Cards Grid */}
-          <div className={styles.doctorsGrid}>
-            {results.doctors.map((doc) => (
-              <Link
-                key={doc.id}
-                href={`/doctors?speciality=Cardiology&city=${encodeURIComponent(selectedLocation)}`}
-                className={styles.doctorCard}
-              >
-                <div className={styles.doctorCardLeft}>
-                  <img
-                    src={doc.image}
-                    alt={doc.name}
-                    className={styles.doctorAvatar}
-                  />
-                  <div className={styles.doctorMeta}>
-                    <div className={styles.doctorName}>{doc.name}</div>
-                    <div className={styles.doctorHospital}>{doc.hospital}</div>
-                    <div className={styles.doctorExp}>{doc.experience}</div>
-                  </div>
-                </div>
-
-                <div className={styles.doctorArrowCircle} aria-hidden>
-                  <ArrowRight size={15} />
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {/* View All Doctors */}
-          <div style={{ marginTop: "12px" }}>
-            <Link
-              href={`/doctors?q=${encodeURIComponent(query)}&city=${encodeURIComponent(selectedLocation)}`}
-              className={styles.viewAllDoctorsLink}
-            >
-              <span>View all doctors</span>
-              <ArrowRight size={14} />
-            </Link>
-          </div>
-
-          {/* Related Specialties & Care */}
-          <div className={styles.relatedSpecialtiesSection}>
-            <div className={styles.relatedSectionTitle}>Related specialties & care</div>
-            <div className={styles.relatedTagsGroup}>
-              {results.relatedSpecialties.map((spec) => (
-                <button
-                  key={spec}
-                  type="button"
-                  className={styles.specPillTag}
-                  onClick={() => onSelectSpecialtyTag?.(spec)}
-                >
-                  {spec}
-                </button>
-              ))}
-              <Link
-                href="/specialities"
-                className={styles.viewAllSpecLink}
-              >
-                View all →
-              </Link>
-            </div>
-          </div>
+          {/* SECONDARY: Related Specialties & Care */}
+          <SecondaryResults
+            relatedSpecialties={results.relatedSpecialties}
+            onSelectSpecialtyTag={onSelectSpecialtyTag}
+          />
         </div>
 
-        {/* ── RIGHT COLUMN: Treatments & Articles (Secondary) ── */}
-        <div className={styles.resultsRightCol}>
-          {/* Treatments & Procedures Section */}
-          <div>
-            <div className={styles.sectionHeadingRow}>
-              <h3 className={styles.sectionTitle}>Treatments & procedures</h3>
-            </div>
-
-            <div className={styles.secondaryCardsList}>
-              {results.treatments.map((t) => (
-                <Link
-                  key={t.id}
-                  href={`/search?q=${encodeURIComponent(t.title)}`}
-                  className={styles.secondaryItemCard}
-                >
-                  <div className={styles.secondaryItemLeft}>
-                    <div className={styles.itemIconBox}>
-                      {renderTreatmentIcon(t.iconType)}
-                    </div>
-                    <div className={styles.itemMeta}>
-                      <div className={styles.itemTitle}>{t.title}</div>
-                      <div className={styles.itemSubtitle}>{t.subtitle}</div>
-                    </div>
-                  </div>
-                  <ArrowRight size={15} className={styles.itemArrow} />
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Related Articles Section */}
-          <div>
-            <div className={styles.sectionHeadingRow}>
-              <h3 className={styles.sectionTitle}>Related articles</h3>
-              <Link href="/search?tab=articles" className={styles.viewAllSmallLink}>
-                View all →
-              </Link>
-            </div>
-
-            <div className={styles.secondaryCardsList}>
-              {results.articles.map((art) => (
-                <Link
-                  key={art.id}
-                  href={`/search?q=${encodeURIComponent(art.title)}`}
-                  className={styles.secondaryItemCard}
-                >
-                  <div className={styles.secondaryItemLeft}>
-                    <div className={styles.itemIconBox}>
-                      {renderArticleIcon(art.iconType)}
-                    </div>
-                    <div className={styles.itemMeta}>
-                      <div className={styles.itemTitle}>{art.title}</div>
-                      <div className={styles.itemSubtitle}>
-                        {art.readTime} · {art.category}
-                      </div>
-                    </div>
-                  </div>
-                  <ArrowRight size={15} className={styles.itemArrow} />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* ── RIGHT COLUMN: Tertiary Supporting Results with Independent Scroll ── */}
+        <TertiaryResults
+          treatments={results.treatments}
+          articles={results.articles}
+        />
       </div>
     </div>
   );

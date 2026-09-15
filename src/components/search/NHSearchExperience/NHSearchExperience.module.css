@@ -689,42 +689,45 @@
   color: #7DD3FC;
 }
 
-/* ── Results Main Split Layout (Left: 60%, Right: 40%) ── */
+/* ── Results Main Split Layout (Dominant Primary 62% vs Tertiary 38%) ── */
 .resultsSplitLayout {
   display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  gap: 36px;
-  margin-top: 18px;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 32px;
+  margin-top: 20px;
   align-items: start;
 }
 
-/* ── Left Column (Doctors & Specialties) ── */
+/* ── Primary Dominant Left Column (60-65% width) ── */
 .resultsLeftCol {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .resultsCategoryHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
 }
 
 .resultsCategoryTitle {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
   color: #FFFFFF;
   margin: 0;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
 }
 
 .resultsCategorySub {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: 13px;
+  font-weight: 500;
   color: #94A3B8;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 /* ── Pulse AI Suggestion Pill / Card in Results ── */
@@ -765,132 +768,201 @@
   transform: scale(1.03);
 }
 
-/* ── Doctors 2-column Grid ── */
+/* ── Dominant Primary Doctors 2-column Grid ── */
 .doctorsGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 14px;
 }
 
 .doctorCard {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 .doctorCard:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(56, 189, 248, 0.35);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(56, 189, 248, 0.2);
 }
 
-.doctorCardLeft {
+.doctorCardTop {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 14px;
   min-width: 0;
 }
 
 .doctorAvatar {
-  width: 44px;
-  height: 44px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.18);
   flex-shrink: 0;
   background: #1e293b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .doctorMeta {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
 }
 
 .doctorName {
-  font-size: 14px;
+  font-size: 15.5px;
   font-weight: 700;
   color: #FFFFFF;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.doctorSpecialty {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #38BDF8;
+  margin-top: 3px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.doctorExpertise {
+  font-size: 11.5px;
+  color: #CBD5E1;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.88;
+}
+
 .doctorHospital {
-  font-size: 12px;
+  font-size: 11px;
   color: #94A3B8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 1px;
+  margin-top: 4px;
 }
 
-.doctorExp {
-  font-size: 11px;
-  color: #64748B;
-  margin-top: 2px;
+.doctorCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.doctorArrowCircle {
+.doctorExpBadge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  color: #CBD5E1;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.01em;
 }
 
-.doctorCard:hover .doctorArrowCircle {
-  background: #034EA2;
+.bookApptBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
   color: #FFFFFF;
-  transform: translateX(2px);
+  background: #ED1C24;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
+  box-shadow: 0 3px 10px rgba(237, 28, 36, 0.35);
+}
+
+.doctorCard:hover .bookApptBtn {
+  background: #FF2E36;
+  box-shadow: 0 4px 14px rgba(237, 28, 36, 0.55);
+  transform: translateY(-1px);
+}
+
+.viewAllDoctorsRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 14px;
 }
 
 .viewAllDoctorsLink {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  font-size: 13px;
-  font-weight: 600;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
   color: #38BDF8;
   text-decoration: none;
-  background: none;
-  border: none;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  padding: 7px 16px;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 0;
   transition: all 0.2s ease;
 }
 
 .viewAllDoctorsLink:hover {
-  color: #7DD3FC;
+  background: rgba(56, 189, 248, 0.16);
+  color: #FFFFFF;
+  border-color: rgba(56, 189, 248, 0.4);
   transform: translateX(2px);
 }
 
-/* ── Related Specialties & Care ── */
+/* ── Secondary Results: Related Specialties & Care ── */
 .relatedSpecialtiesSection {
-  margin-top: 26px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 22px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.relatedSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
 .relatedSectionTitle {
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 700;
-  color: #FFFFFF;
-  margin-bottom: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94A3B8;
+  margin: 0;
 }
 
 .relatedTagsGroup {
@@ -901,22 +973,23 @@
 }
 
 .specPillTag {
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #E2E8F0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #CBD5E1;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   user-select: none;
 }
 
 .specPillTag:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.35);
   color: #FFFFFF;
+  transform: translateY(-1px);
 }
 
 .viewAllSpecLink {
@@ -934,28 +1007,54 @@
   text-decoration: underline;
 }
 
-/* ── Right Column (Treatments & Articles) ── */
+/* ── Tertiary Right Rail with Independent Vertical Scroll ── */
 .resultsRightCol {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
+  max-height: 480px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+  padding-left: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.resultsRightCol::-webkit-scrollbar {
+  width: 5px;
+}
+
+.resultsRightCol::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.resultsRightCol::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+}
+
+.resultsRightCol::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .sectionHeadingRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .sectionTitle {
-  font-size: 15px;
+  font-size: 13.5px;
   font-weight: 700;
-  color: #FFFFFF;
+  letter-spacing: 0.02em;
+  color: #E2E8F0;
+  margin: 0;
 }
 
 .viewAllSmallLink {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #38BDF8;
   text-decoration: none;
@@ -972,32 +1071,32 @@
 .secondaryCardsList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .secondaryItemCard {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
 }
 
 .secondaryItemCard:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.14);
   transform: translateX(2px);
 }
 
 .secondaryItemLeft {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -1005,11 +1104,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: rgba(3, 78, 162, 0.25);
-  border: 1px solid rgba(3, 78, 162, 0.4);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(3, 78, 162, 0.2);
+  border: 1px solid rgba(3, 78, 162, 0.35);
   color: #38BDF8;
   flex-shrink: 0;
 }
@@ -1021,16 +1120,16 @@
 }
 
 .itemTitle {
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: #FFFFFF;
+  color: #F1F5F9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .itemSubtitle {
-  font-size: 11.5px;
+  font-size: 11px;
   color: #94A3B8;
   margin-top: 1px;
 }
@@ -1085,12 +1184,12 @@
 
 .skeletonDoctorCard {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  padding: 14px 16px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .skeletonSecondaryCard {
