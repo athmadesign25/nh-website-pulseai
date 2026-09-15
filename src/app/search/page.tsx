@@ -2623,7 +2623,7 @@ function SearchResultsContent() {
 
                     <h2 style={{ fontSize: 24, fontWeight: 700, color: "var(--color-text)", marginBottom: selectedAlphabets.length > 0 ? 16 : 24 }}>Specialties</h2>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
-                      {filteredSpecialty.filter(s => selectedAlphabets.length === 0 || selectedAlphabets.includes(s.charAt(0).toUpperCase())).map((spec) => {
+                      {filteredSpecialties.filter((s: string) => selectedAlphabets.length === 0 || selectedAlphabets.includes(s.charAt(0).toUpperCase())).map((spec: string) => {
                         const iconMap: Record<string, string> = {
                           "Cardiologist": "Cardiology.svg",
                           "Orthopaedician": "Orthopaedics.svg",
@@ -2673,7 +2673,7 @@ function SearchResultsContent() {
                         );
                       })}
                     </div>
-                    {filteredSpecialty.filter(s => selectedAlphabets.length === 0 || selectedAlphabets.includes(s.charAt(0).toUpperCase())).length === 0 && <EmptyState category="specialties" />}
+                    {filteredSpecialties.filter((s: string) => selectedAlphabets.length === 0 || selectedAlphabets.includes(s.charAt(0).toUpperCase())).length === 0 && <EmptyState category="specialties" />}
                   </div>
                 </div>
               )}

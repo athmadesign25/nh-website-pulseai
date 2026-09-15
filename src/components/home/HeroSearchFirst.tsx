@@ -6,7 +6,7 @@ import styles from "./HeroSearchFirst.module.css";
 
 import StatCarousel from "@/features/home/hero/components/StatCarousel";
 import HeroHeadline from "@/features/home/hero/components/HeroHeadline";
-import HeroSearch from "@/features/home/hero/components/search/HeroSearch";
+import { NHSearchExperience } from "@/components/search/NHSearchExperience";
 
 export default function HeroSearchFirst() {
   const [isOpen, setIsOpen] = useState(false);
@@ -111,13 +111,10 @@ export default function HeroSearchFirst() {
         </div>
 
         <div className={styles.centerWrap}>
-          <div className={styles.heroStack}>
+          <div className={`${styles.heroStack} ${isOpen ? styles.heroStackActive : ""}`}>
             <HeroHeadline isOpen={isOpen} />
-            <HeroSearch 
-              isOpen={isOpen}
+            <NHSearchExperience 
               onOpenChange={setIsOpen}
-              isPulseActive={isPulseActive}
-              onPulseActiveChange={setIsPulseActive}
             />
           </div>
         </div>

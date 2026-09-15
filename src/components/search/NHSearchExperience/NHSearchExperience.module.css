@@ -1,0 +1,886 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Narayana Health Unified Search Experience Styles
+   Matches Reference Assets:
+   01 — Neutral default landing
+   02 — Active search canvas
+   03 — Active search result
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.searchExperienceWrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 50;
+  perspective: 1200px;
+}
+
+/* ── Backing Dimmer Overlay when Active or Results ── */
+.canvasBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 10, 20, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 40;
+  pointer-events: auto;
+}
+
+/* ── Main Unified Search Shell ── */
+.searchShell {
+  position: relative;
+  z-index: 55;
+  width: 100%;
+  border-radius: 20px;
+  background: rgba(22, 28, 45, 0.78);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 20px 50px -10px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  transition: box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+/* Specific state dimensions */
+.stateLanding {
+  max-width: 680px;
+  padding: 16px 20px 14px;
+}
+
+.stateActive {
+  max-width: 880px;
+  padding: 20px 26px 22px;
+  background: rgba(18, 24, 38, 0.92);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 30px 70px -15px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.stateResults {
+  max-width: 1080px;
+  padding: 22px 30px 24px;
+  background: rgba(16, 22, 36, 0.94);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 35px 80px -15px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+/* ── Top Header Row (Pulse AI badge, Location, Close) ── */
+.topHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.headerLeftGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Pulse AI Badge (3 iconic vertical bars) ── */
+.pulseBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.pulseBars {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 14px;
+}
+
+.pulseBar1 {
+  width: 2.5px;
+  height: 9px;
+  border-radius: 2px;
+  background: #00C4FF;
+}
+
+.pulseBar2 {
+  width: 2.5px;
+  height: 14px;
+  border-radius: 2px;
+  background: #034EA2;
+}
+
+.pulseBar3 {
+  width: 2.5px;
+  height: 11px;
+  border-radius: 2px;
+  background: #ED1C24;
+}
+
+.pulseText {
+  font-size: 13px;
+  font-weight: 600;
+  color: #F1F5F9;
+  letter-spacing: 0.02em;
+}
+
+/* ── Close Button (State 02 & 03) ── */
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  transform: scale(1.05);
+}
+
+/* ── Red Horizon Divider ── */
+.redDivider {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #ED1C24 0%, #FF454D 50%, #ED1C24 100%);
+  border-radius: 2px;
+  margin: 10px 0 16px;
+  box-shadow: 0 0 12px rgba(237, 28, 36, 0.35);
+}
+
+/* ── State 01: Default Landing Elements ── */
+.landingInputRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: pointer;
+}
+
+.landingPlaceholder {
+  font-size: 16px;
+  font-weight: 400;
+  color: #CBD5E1;
+  user-select: none;
+}
+
+.landingBottomRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+  gap: 12px;
+}
+
+.bottomPillsGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.iconControlBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.iconControlBtn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.submitArrowBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: #034EA2;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(3, 78, 162, 0.4);
+}
+
+.submitArrowBtn:hover {
+  background: #0066FF;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 16px rgba(0, 102, 255, 0.5);
+}
+
+.submitArrowBtn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* ── Location Selector Pill ── */
+.locationPill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(237, 28, 36, 0.32);
+  background: rgba(237, 28, 36, 0.08);
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.locationPill:hover {
+  background: rgba(237, 28, 36, 0.16);
+  border-color: rgba(237, 28, 36, 0.55);
+}
+
+.locationMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 170px;
+  background: rgba(18, 24, 38, 0.96);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.locationMenuItem {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #CBD5E1;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.locationMenuItem:hover,
+.locationMenuItemSelected {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* ── Action / Filter Pills ("Find a doctor", "Describe my symptoms") ── */
+.actionPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #E2E8F0;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.actionPill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: #FFFFFF;
+}
+
+.actionPillActive {
+  background: rgba(3, 78, 162, 0.25);
+  border-color: rgba(3, 78, 162, 0.6);
+  color: #FFFFFF;
+}
+
+/* ── State 02: Active Search Elements ── */
+.activeInputRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.activeTextInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 500;
+  color: #FFFFFF;
+  line-height: 1.4;
+  caret-color: #00C4FF;
+}
+
+.activeTextInput::placeholder {
+  color: #64748B;
+  font-weight: 400;
+}
+
+.activePillsRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.suggestionsSection {
+  margin-top: 22px;
+}
+
+.suggestionsHeader {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8B9BB4;
+  margin-bottom: 12px;
+}
+
+.suggestionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestionItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+  font-size: 15px;
+  color: #CBD5E1;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.suggestionItem:hover,
+.suggestionItemActive {
+  background: rgba(255, 255, 255, 0.07);
+  color: #FFFFFF;
+}
+
+.suggestionArrow {
+  color: #8B9BB4;
+  flex-shrink: 0;
+}
+
+.suggestionText {
+  flex: 1;
+}
+
+.highlightMatch {
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+/* ── Subtle Pulse AI Status ("Intelligently preparing matches…") ── */
+.pulseStatusRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+  color: #94A3B8;
+  user-select: none;
+}
+
+.sparkleIcon {
+  color: #00C4FF;
+  animation: pulseSparkle 2s ease-in-out infinite;
+}
+
+@keyframes pulseSparkle {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.15) rotate(15deg);
+    opacity: 1;
+    color: #FF5252;
+  }
+}
+
+/* ── State 03: Results Canvas ── */
+.resultsQueryBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+}
+
+.resultsQueryLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.resultsQuerySearchIcon {
+  color: #94A3B8;
+  flex-shrink: 0;
+}
+
+.resultsQueryText {
+  font-size: 19px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.editSearchBtn {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #38BDF8;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.editSearchBtn:hover {
+  background: rgba(56, 189, 248, 0.12);
+  color: #7DD3FC;
+}
+
+/* ── Results Main Split Layout (Left: 60%, Right: 40%) ── */
+.resultsSplitLayout {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 36px;
+  margin-top: 18px;
+  align-items: start;
+}
+
+/* ── Left Column (Doctors & Specialties) ── */
+.resultsLeftCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.resultsCategoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.resultsCategoryTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.resultsCategorySub {
+  font-size: 12px;
+  font-weight: 400;
+  color: #94A3B8;
+  margin-top: 2px;
+}
+
+/* ── Pulse AI Suggestion Pill / Card in Results ── */
+.pulseAiCard {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 9999px;
+  background: rgba(3, 78, 162, 0.18);
+  border: 1px solid rgba(0, 196, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.pulseAiCardText {
+  font-size: 12px;
+  font-weight: 500;
+  color: #E2E8F0;
+}
+
+.askPulseBtn {
+  background: #034EA2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  padding: 5px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.askPulseBtn:hover {
+  background: #0066FF;
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.03);
+}
+
+/* ── Doctors 2-column Grid ── */
+.doctorsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.doctorCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.doctorCard:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.doctorCardLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.doctorAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+  background: #1e293b;
+}
+
+.doctorMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.doctorName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doctorHospital {
+  font-size: 12px;
+  color: #94A3B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.doctorExp {
+  font-size: 11px;
+  color: #64748B;
+  margin-top: 2px;
+}
+
+.doctorArrowCircle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: #CBD5E1;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.doctorCard:hover .doctorArrowCircle {
+  background: #034EA2;
+  color: #FFFFFF;
+  transform: translateX(2px);
+}
+
+.viewAllDoctorsLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #38BDF8;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.viewAllDoctorsLink:hover {
+  color: #7DD3FC;
+  transform: translateX(2px);
+}
+
+/* ── Related Specialties & Care ── */
+.relatedSpecialtiesSection {
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.relatedSectionTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 12px;
+}
+
+.relatedTagsGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.specPillTag {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #E2E8F0;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.specPillTag:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+.viewAllSpecLink {
+  color: #38BDF8;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 4px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.viewAllSpecLink:hover {
+  color: #7DD3FC;
+  text-decoration: underline;
+}
+
+/* ── Right Column (Treatments & Articles) ── */
+.resultsRightCol {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sectionHeadingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.viewAllSmallLink {
+  font-size: 12px;
+  font-weight: 600;
+  color: #38BDF8;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.viewAllSmallLink:hover {
+  color: #7DD3FC;
+  text-decoration: underline;
+}
+
+.secondaryCardsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.secondaryItemCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+}
+
+.secondaryItemCard:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateX(2px);
+}
+
+.secondaryItemLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.itemIconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(3, 78, 162, 0.25);
+  border: 1px solid rgba(3, 78, 162, 0.4);
+  color: #38BDF8;
+  flex-shrink: 0;
+}
+
+.itemMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemSubtitle {
+  font-size: 11.5px;
+  color: #94A3B8;
+  margin-top: 1px;
+}
+
+.itemArrow {
+  color: #64748B;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.secondaryItemCard:hover .itemArrow {
+  color: #FFFFFF;
+  transform: translateX(3px);
+}
+
+/* ── Responsive Viewports ── */
+@media (max-width: 1024px) {
+  .resultsSplitLayout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .stateLanding,
+  .stateActive,
+  .stateResults {
+    max-width: 94vw;
+    padding: 16px;
+  }
+
+  .doctorsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .landingBottomRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .bottomPillsGroup {
+    width: 100%;
+  }
+
+  .resultsCategoryHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
