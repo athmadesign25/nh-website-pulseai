@@ -36,15 +36,17 @@
 
 /* Specific state dimensions */
 .stateLanding {
-  max-width: 680px;
-  padding: 16px 20px 14px;
+  max-width: 720px;
+  padding: 18px 24px 16px;
+  border-radius: 20px;
 }
 
 .stateActive {
   max-width: 880px;
-  padding: 20px 26px 22px;
-  background: rgba(18, 24, 38, 0.92);
+  padding: 26px 32px 28px;
+  background: rgba(18, 24, 38, 0.94);
   border-color: rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
   box-shadow: 
     0 30px 70px -15px rgba(0, 0, 0, 0.7),
     0 0 0 1px rgba(255, 255, 255, 0.15),
@@ -53,9 +55,10 @@
 
 .stateResults {
   max-width: 1080px;
-  padding: 22px 30px 24px;
-  background: rgba(16, 22, 36, 0.94);
+  padding: 28px 36px 30px;
+  background: rgba(16, 22, 36, 0.96);
   border-color: rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
   box-shadow: 
     0 35px 80px -15px rgba(0, 0, 0, 0.75),
     0 0 0 1px rgba(255, 255, 255, 0.15),
@@ -68,7 +71,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .headerLeftGroup {
@@ -317,8 +320,9 @@
 .activeInputRow {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
+  padding: 4px 0;
 }
 
 .inputGhostWrapper {
@@ -335,13 +339,16 @@
   border: none;
   outline: none;
   font-family: inherit;
-  font-size: 19px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 600;
   color: #FFFFFF;
   line-height: 1.4;
+  letter-spacing: -0.01em;
   caret-color: #00C4FF;
   position: relative;
   z-index: 2;
+  padding: 0;
+  margin: 0;
 }
 
 .activeTextInput::placeholder {
@@ -358,32 +365,36 @@
   right: 0;
   display: flex;
   align-items: center;
-  pointer-events: auto;
-  cursor: pointer;
+  pointer-events: none;
   font-family: inherit;
-  font-size: 19px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 600;
   line-height: 1.4;
+  letter-spacing: -0.01em;
   user-select: none;
   white-space: pre;
   z-index: 1;
+  padding: 0;
+  margin: 0;
 }
 
 .ghostInvisibleTyped {
   color: transparent;
   opacity: 0;
+  visibility: hidden;
 }
 
 .ghostSuffix {
-  color: #94A3B8;
-  opacity: 0.8;
-  letter-spacing: normal;
-  transition: opacity 0.15s ease;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: color 0.15s ease;
 }
 
-.ghostTextOverlay:hover .ghostSuffix {
-  color: #CBD5E1;
-  opacity: 1;
+.ghostSuffix:hover {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .tabBadge {
@@ -399,6 +410,8 @@
   padding: 1px 6px;
   letter-spacing: 0.02em;
   user-select: none;
+  pointer-events: auto;
+  cursor: pointer;
   animation: tabBadgePulse 2s infinite ease-in-out;
 }
 
@@ -417,21 +430,22 @@
 .activePillsRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-top: 4px;
+  margin-bottom: 6px;
 }
 
 /* ── Empty State Canvas (Before Typing) ── */
 .emptyCanvasPrompt {
-  margin-top: 20px;
-  padding: 16px 18px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  margin-top: 24px;
+  padding: 24px 28px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
   gap: 8px;
-  animation: fadeInEmpty 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeInEmpty 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeInEmpty {
@@ -448,44 +462,66 @@
 .emptyPromptTitle {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13.5px;
+  gap: 10px;
+  font-size: 15px;
   font-weight: 600;
-  color: #F1F5F9;
+  color: #F8FAFC;
 }
 
 .emptyPromptSub {
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: #94A3B8;
-  line-height: 1.5;
-  margin: 0;
+  line-height: 1.6;
+  margin: 4px 0 14px;
 }
 
-.sampleKeywordBtn {
-  background: rgba(3, 78, 162, 0.25);
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  color: #38BDF8;
-  padding: 1px 7px;
-  border-radius: 6px;
-  cursor: pointer;
+.genericCategoriesRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.genericCatPill {
   font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
-  transition: all 0.2s;
-  display: inline-block;
-  margin: 0 2px;
+  font-weight: 500;
+  color: #94A3B8;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+  user-select: none;
+  transition: all 0.2s ease;
 }
 
-.sampleKeywordBtn:hover {
-  background: rgba(3, 78, 162, 0.5);
-  border-color: #38BDF8;
+.genericCatPill:hover {
   color: #FFFFFF;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.genericDot {
+  color: #475569;
+  font-size: 14px;
+  user-select: none;
 }
 
 /* ── Live Predictions Section ── */
 .suggestionsSection {
-  margin-top: 22px;
+  margin-top: 24px;
+  animation: fadeInPredictions 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInPredictions {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .suggestionsHeaderRow {
@@ -493,6 +529,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+  padding: 0 4px;
 }
 
 .suggestionsHeader {
@@ -500,16 +537,16 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #8B9BB4;
+  color: #64748B;
 }
 
 .intentTagBadge {
   font-size: 11px;
   font-weight: 600;
   color: #38BDF8;
-  background: rgba(3, 78, 162, 0.25);
+  background: rgba(3, 78, 162, 0.22);
   border: 1px solid rgba(56, 189, 248, 0.25);
-  padding: 2px 9px;
+  padding: 2.5px 10px;
   border-radius: 9999px;
   letter-spacing: 0.03em;
 }
@@ -517,39 +554,42 @@
 .suggestionsList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .suggestionItem {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 14px;
-  border-radius: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   text-align: left;
   font-family: inherit;
   font-size: 15px;
   color: #CBD5E1;
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   width: 100%;
 }
 
 .suggestionItem:hover,
 .suggestionItemActive {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
   color: #FFFFFF;
+  transform: translateX(2px);
 }
 
 .suggestionArrow {
-  color: #8B9BB4;
+  color: #38BDF8;
   flex-shrink: 0;
 }
 
 .suggestionText {
   flex: 1;
+  font-weight: 450;
 }
 
 .pressEnterHint {

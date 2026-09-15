@@ -189,7 +189,7 @@ export default function ActiveSearchCanvas({
               setSelectedSugIndex(-1);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Type symptoms or conditions, e.g. 'c' for chest or 'knee'..."
+            placeholder="Start typing a symptom, condition, specialty or doctor..."
             aria-label="Search symptoms, conditions or doctors"
             autoComplete="off"
             spellCheck="false"
@@ -260,27 +260,20 @@ export default function ActiveSearchCanvas({
         <div className={styles.emptyCanvasPrompt}>
           <div className={styles.emptyPromptTitle}>
             <Sparkles size={16} className={styles.sparkleIcon} />
-            <span>Search Narayana Health's clinical network</span>
+            <span>Search Narayana Health</span>
           </div>
           <p className={styles.emptyPromptSub}>
-            Start typing any symptom, specialty or procedure. Try typing{" "}
-            <button
-              type="button"
-              className={styles.sampleKeywordBtn}
-              onClick={() => onQueryChange("c")}
-            >
-              &ldquo;c&rdquo;
-            </button>{" "}
-            for chest pain, or{" "}
-            <button
-              type="button"
-              className={styles.sampleKeywordBtn}
-              onClick={() => onQueryChange("knee")}
-            >
-              &ldquo;knee&rdquo;
-            </button>{" "}
-            for joint care.
+            Start typing a symptom, condition, specialty, procedure or doctor name.
           </p>
+          <div className={styles.genericCategoriesRow}>
+            <span className={styles.genericCatPill}>Symptoms</span>
+            <span className={styles.genericDot}>·</span>
+            <span className={styles.genericCatPill}>Conditions</span>
+            <span className={styles.genericDot}>·</span>
+            <span className={styles.genericCatPill}>Specialists</span>
+            <span className={styles.genericDot}>·</span>
+            <span className={styles.genericCatPill}>Procedures</span>
+          </div>
         </div>
       )}
 

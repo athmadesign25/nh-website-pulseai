@@ -84,52 +84,86 @@ export const NH_LOCATIONS = [
 ];
 
 /**
- * Live predictive sentence completion logic.
- * Returns both the inline completion suffix and a list of secondary query predictions.
+ * Helper to compute the exact inline suffix remaining after typedText,
+ * cleanly handling spaces so no double-spaces or alignment jumps occur.
+ */
+function computePredictionSuffix(targetPhrase: string, rawTyped: string): string {
+  const lowerTarget = targetPhrase.toLowerCase();
+  const lowerRaw = rawTyped.toLowerCase();
+
+  if (lowerTarget.startsWith(lowerRaw)) {
+    return targetPhrase.slice(rawTyped.length);
+  }
+
+  const clean = rawTyped.trim().toLowerCase();
+  if (lowerTarget.startsWith(clean)) {
+    let rem = targetPhrase.slice(clean.length);
+    if (rawTyped.endsWith(" ") && rem.startsWith(" ")) {
+      rem = rem.slice(1);
+    }
+    return rem;
+  }
+
+  return "";
+}
+
+/**
+ * Live predictive sentence completion logic (Scenario A: Cardiology & Scenario B: Orthopaedics).
+ * Completes the user's sentence/thought instead of asking a question.
+ *
+ * Visual format:
+ * typedText + suffix = fullText
+ * e.g. "c" + "ardiologist near me" => "cardiologist near me"
+ *      "chest" + " pain and I need a doctor" => "chest pain and I need a doctor"
+ *      "k" + "nee pain" => "knee pain"
+ *      "knee" + " pain — find an orthopaedic doctor" => "knee pain — find an orthopaedic doctor"
  */
 export function getPredictiveCompletion(typedText: string): PredictiveState | null {
   const clean = typedText.trim().toLowerCase();
   if (!clean) return null;
 
-  // ── DEMO SEARCH 1: Cardiology Progression ('c' / 'ch' / 'chest') ──
+  // ── SCENARIO A: CARDIOLOGY ('c' -> 'ch' -> 'chest' -> 'chest pain') ──
   if (clean === "c") {
+    const target = "cardiologist near me";
     return {
-      fullText: "can I help you find a cardiologist?",
-      suffix: "an I help you find a cardiologist?",
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
       suggestions: [
-        "I have chest pain and need a doctor",
-        "can I help you find a cardiologist?",
-        "chest pain causes and emergency signs",
+        "cardiologist near me",
+        "chest pain and need a doctor",
         "cardiology consultation in Bangalore",
+        "chest pain specialist near me",
       ],
       intent: "cardiology",
-      intentLabel: "Cardiology & Chest Care",
+      intentLabel: "Cardiology",
     };
   }
 
   if (clean === "ch") {
+    const target = "chest pain and need a doctor";
     return {
-      fullText: "chest pain — find the right specialist",
-      suffix: "est pain — find the right specialist",
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
       suggestions: [
-        "I have chest pain and need a doctor",
-        "chest pain — find the right specialist",
-        "chest pain doctor near me",
-        "chest tightness and breathing difficulty",
+        "chest pain and need a doctor",
+        "chest pain and I need a doctor",
+        "chest pain specialist near me",
+        "cardiologist near me",
       ],
       intent: "cardiology",
-      intentLabel: "Cardiac Care",
+      intentLabel: "Cardiology",
     };
   }
 
-  if (clean.startsWith("chest p") || clean === "chest pain") {
+  if (clean === "chest") {
+    const target = "chest pain and I need a doctor";
     return {
-      fullText: "I have chest pain and need a doctor",
-      suffix: clean === "chest pain" ? " and need a doctor" : "ain and need a doctor",
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
       suggestions: [
-        "I have chest pain and need a doctor",
-        "chest pain doctor near me",
-        "chest pain causes and diagnosis",
+        "chest pain and I need a doctor",
+        "chest pain and need a cardiologist",
+        "chest pain causes and emergency signs",
         "chest pain clinic in Bangalore",
       ],
       intent: "cardiology",
@@ -137,15 +171,32 @@ export function getPredictiveCompletion(typedText: string): PredictiveState | nu
     };
   }
 
-  if (clean.startsWith("chest")) {
+  if (clean === "chest pain" || clean.startsWith("chest p")) {
+    const target = "chest pain and need a cardiologist";
     return {
-      fullText: "chest pain — find a cardiologist near you",
-      suffix: " pain — find a cardiologist near you",
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
       suggestions: [
         "I have chest pain and need a doctor",
-        "chest pain — find a cardiologist near you",
-        "chest pain causes and diagnosis",
+        "chest pain and need a cardiologist",
         "chest pain doctor near me",
+        "chest pain emergency assessment",
+      ],
+      intent: "cardiology",
+      intentLabel: "Cardiology",
+    };
+  }
+
+  if (clean.startsWith("i have chest") || clean.startsWith("i need a cardio")) {
+    const target = "I have chest pain and need a doctor";
+    return {
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
+      suggestions: [
+        "I have chest pain and need a doctor",
+        "chest pain and need a cardiologist",
+        "cardiologist near me",
+        "cardiology consultation in Bangalore",
       ],
       intent: "cardiology",
       intentLabel: "Cardiology",
@@ -153,9 +204,10 @@ export function getPredictiveCompletion(typedText: string): PredictiveState | nu
   }
 
   if (clean.startsWith("cardio") || clean.startsWith("heart")) {
+    const target = "cardiology consultation with top heart specialists";
     return {
-      fullText: "cardiology consultation with top heart specialists",
-      suffix: clean.startsWith("cardio") ? "logy consultation with top heart specialists" : " specialist in Bangalore",
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
       suggestions: [
         "I have chest pain and need a doctor",
         "cardiology consultation in Bangalore",
@@ -167,61 +219,81 @@ export function getPredictiveCompletion(typedText: string): PredictiveState | nu
     };
   }
 
-  // ── DEMO SEARCH 2: Orthopaedics Progression ('k' / 'kn' / 'knee') ──
+  // ── SCENARIO B: ORTHOPAEDICS ('k' -> 'kn' -> 'knee' -> 'knee pain') ──
   if (clean === "k") {
+    const target = "knee pain";
     return {
-      fullText: "knee pain — find the right specialist",
-      suffix: "nee pain — find the right specialist",
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
       suggestions: [
-        "I have knee pain and need an orthopaedic doctor",
-        "knee pain — find the right specialist",
-        "knee replacement surgeon in Bangalore",
-        "knee pain causes and home exercises",
-      ],
-      intent: "orthopaedics",
-      intentLabel: "Orthopaedic Care",
-    };
-  }
-
-  if (clean === "kn") {
-    return {
-      fullText: "knee pain — find an orthopaedic doctor",
-      suffix: "ee pain — find an orthopaedic doctor",
-      suggestions: [
-        "I have knee pain and need an orthopaedic doctor",
+        "knee pain",
+        "knee pain and need a specialist",
         "knee pain — find an orthopaedic doctor",
-        "knee arthroscopy specialist",
-        "knee joint swelling and pain relief",
+        "I have knee pain and need an orthopaedic doctor",
       ],
       intent: "orthopaedics",
       intentLabel: "Orthopaedics",
     };
   }
 
-  if (clean.startsWith("knee p") || clean === "knee pain") {
+  if (clean === "kn") {
+    const target = "knee pain and need a specialist";
     return {
-      fullText: "I have knee pain and need an orthopaedic doctor",
-      suffix: clean === "knee pain" ? " and need an orthopaedic doctor" : "ain and need an orthopaedic doctor",
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
       suggestions: [
-        "I have knee pain and need an orthopaedic doctor",
-        "knee pain doctor near me",
-        "knee pain assessment and MRI",
+        "knee pain and need a specialist",
+        "knee pain — find an orthopaedic doctor",
+        "knee arthroscopy expert",
         "knee replacement consultation",
       ],
       intent: "orthopaedics",
-      intentLabel: "Orthopaedics & Joint Care",
+      intentLabel: "Orthopaedics",
     };
   }
 
-  if (clean.startsWith("knee")) {
+  if (clean === "knee") {
+    const target = "knee pain — find an orthopaedic doctor";
     return {
-      fullText: "knee pain — find an orthopaedic specialist near you",
-      suffix: " pain — find an orthopaedic specialist near you",
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
+      suggestions: [
+        "knee pain — find an orthopaedic doctor",
+        "I have knee pain and need an orthopaedic doctor",
+        "knee pain and need a specialist",
+        "knee doctor near me",
+      ],
+      intent: "orthopaedics",
+      intentLabel: "Orthopaedics",
+    };
+  }
+
+  if (clean === "knee pain" || clean.startsWith("knee p")) {
+    const target = "knee pain and need an orthopaedic doctor";
+    return {
+      fullText: "I have knee pain and need an orthopaedic doctor",
+      suffix: computePredictionSuffix(target, typedText),
       suggestions: [
         "I have knee pain and need an orthopaedic doctor",
-        "knee pain — find an orthopaedic specialist near you",
-        "knee replacement surgery options",
-        "knee doctor near me in Bangalore",
+        "knee pain — find an orthopaedic doctor",
+        "knee pain and need an orthopaedic doctor",
+        "knee replacement surgeon in Bangalore",
+      ],
+      intent: "orthopaedics",
+      intentLabel: "Orthopaedics",
+    };
+  }
+
+  if (clean.startsWith("i have knee") || clean.startsWith("i need an ortho")) {
+    const target = "I have knee pain and need an orthopaedic doctor";
+    return {
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
+      suggestions: [
+        "I have knee pain and need an orthopaedic doctor",
+        "knee pain — find an orthopaedic doctor",
+        "knee doctor near me",
+        "orthopaedic consultation in Bangalore",
       ],
       intent: "orthopaedics",
       intentLabel: "Orthopaedics",
@@ -229,9 +301,10 @@ export function getPredictiveCompletion(typedText: string): PredictiveState | nu
   }
 
   if (clean.startsWith("ortho") || clean.startsWith("joint") || clean.startsWith("bone")) {
+    const target = "orthopaedic doctor for joint and bone consultation";
     return {
-      fullText: "orthopaedic doctor for joint and bone consultation",
-      suffix: clean.startsWith("ortho") ? "paedic doctor for joint and bone consultation" : " specialist near me",
+      fullText: target,
+      suffix: computePredictionSuffix(target, typedText),
       suggestions: [
         "I have knee pain and need an orthopaedic doctor",
         "orthopaedic consultation in Bangalore",
