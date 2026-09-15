@@ -47,36 +47,37 @@ export default function SkeletonResultsCanvas({ query }: SkeletonResultsCanvasPr
               <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 220, height: 22 }} />
               <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 140, height: 14 }} />
             </div>
-            <div className={`${styles.skeletonPill} ${styles.shimmer}`} style={{ width: 180, height: 32 }} />
+            <div className={`${styles.skeletonPill} ${styles.shimmer}`} style={{ width: 180, height: 30 }} />
           </div>
+
+          <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 130, height: 12, marginBottom: 12 }} />
 
           {/* 4 Doctor Skeletons */}
           <div className={styles.doctorsGrid}>
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className={styles.skeletonDoctorCard}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-                  <div className={`${styles.skeletonCircle} ${styles.shimmer}`} style={{ width: 58, height: 58 }} />
+                  <div className={`${styles.skeletonCircle} ${styles.shimmer}`} style={{ width: 52, height: 52 }} />
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-                    <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 140, height: 16 }} />
-                    <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 180, height: 13 }} />
-                    <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 130, height: 11 }} />
-                    <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 100, height: 11 }} />
+                    <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 130, height: 15 }} />
+                    <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 90, height: 13 }} />
+                    <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 110, height: 12 }} />
+                    <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 85, height: 12, marginTop: 4 }} />
+                    <div className={`${styles.skeletonPill} ${styles.shimmer}`} style={{ width: 115, height: 26, borderRadius: 6, marginTop: 8 }} />
                   </div>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div className={`${styles.skeletonPill} ${styles.shimmer}`} style={{ width: 90, height: 22 }} />
-                  <div className={`${styles.skeletonPill} ${styles.shimmer}`} style={{ width: 110, height: 28, borderRadius: 8 }} />
                 </div>
               </div>
             ))}
           </div>
 
+          <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 110, height: 14, marginTop: 18 }} />
+
           {/* Specialties Skeleton Tags */}
           <div className={styles.relatedSpecialtiesSection}>
-            <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 160, height: 16, marginBottom: 12 }} />
+            <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 160, height: 12, marginBottom: 12 }} />
             <div className={styles.relatedTagsGroup}>
               {[80, 110, 60, 95, 120].map((w, idx) => (
-                <div key={idx} className={`${styles.skeletonPill} ${styles.shimmer}`} style={{ width: w, height: 28 }} />
+                <div key={idx} className={`${styles.skeletonPill} ${styles.shimmer}`} style={{ width: w, height: 26 }} />
               ))}
             </div>
           </div>
@@ -84,37 +85,37 @@ export default function SkeletonResultsCanvas({ query }: SkeletonResultsCanvasPr
 
         {/* Right Column Skeleton */}
         <div className={styles.resultsRightCol}>
-          <div>
-            <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 170, height: 16, marginBottom: 12 }} />
-            <div className={styles.secondaryCardsList}>
+          <div className={styles.tertiarySectionBlock}>
+            <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 140, height: 13, marginBottom: 10 }} />
+            <div className={styles.tertiaryListRows}>
               {[1, 2, 3].map((i) => (
                 <div key={i} className={styles.skeletonSecondaryCard}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div className={`${styles.skeletonCircle} ${styles.shimmer}`} style={{ width: 36, height: 36, borderRadius: 10 }} />
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 140, height: 14 }} />
-                      <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 100, height: 11 }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div className={`${styles.skeletonCircle} ${styles.shimmer}`} style={{ width: 26, height: 26, borderRadius: 6 }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 130, height: 13 }} />
+                      <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 85, height: 10 }} />
                     </div>
                   </div>
-                  <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 16, height: 16 }} />
+                  <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 12, height: 12 }} />
                 </div>
               ))}
             </div>
           </div>
 
-          <div>
-            <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 130, height: 16, marginBottom: 12 }} />
-            <div className={styles.secondaryCardsList}>
+          <div className={styles.tertiarySectionBlock}>
+            <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 110, height: 13, marginBottom: 10 }} />
+            <div className={styles.tertiaryListRows}>
               {[1, 2, 3].map((i) => (
                 <div key={i} className={styles.skeletonSecondaryCard}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div className={`${styles.skeletonCircle} ${styles.shimmer}`} style={{ width: 36, height: 36, borderRadius: 10 }} />
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 150, height: 14 }} />
-                      <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 90, height: 11 }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div className={`${styles.skeletonCircle} ${styles.shimmer}`} style={{ width: 26, height: 26, borderRadius: 6 }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 140, height: 13 }} />
+                      <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 75, height: 10 }} />
                     </div>
                   </div>
-                  <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 16, height: 16 }} />
+                  <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 12, height: 12 }} />
                 </div>
               ))}
             </div>

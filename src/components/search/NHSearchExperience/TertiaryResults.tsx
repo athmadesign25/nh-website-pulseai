@@ -53,61 +53,61 @@ export default function TertiaryResults({
   return (
     <div className={styles.resultsRightCol} aria-label="Tertiary supporting results">
       {/* Treatments & Procedures Section */}
-      <div>
+      <div className={styles.tertiarySectionBlock}>
         <div className={styles.sectionHeadingRow}>
-          <h3 className={styles.sectionTitle}>Treatments & procedures</h3>
+          <span className={styles.tertiarySectionTitle}>Treatments & procedures</span>
         </div>
 
-        <div className={styles.secondaryCardsList}>
+        <div className={styles.tertiaryListRows}>
           {treatments.map((t) => (
             <Link
               key={t.id}
               href={`/search?q=${encodeURIComponent(t.title)}`}
-              className={styles.secondaryItemCard}
+              className={styles.tertiaryListRow}
             >
-              <div className={styles.secondaryItemLeft}>
-                <div className={styles.itemIconBox}>
+              <div className={styles.tertiaryRowLeft}>
+                <span className={styles.tertiaryRowIcon}>
                   {renderTreatmentIcon(t.iconType)}
-                </div>
-                <div className={styles.itemMeta}>
-                  <div className={styles.itemTitle}>{t.title}</div>
-                  <div className={styles.itemSubtitle}>{t.subtitle}</div>
+                </span>
+                <div className={styles.tertiaryRowMeta}>
+                  <div className={styles.tertiaryRowTitle}>{t.title}</div>
+                  <div className={styles.tertiaryRowSubtitle}>{t.subtitle}</div>
                 </div>
               </div>
-              <ArrowRight size={14} className={styles.itemArrow} />
+              <ArrowRight size={13} className={styles.tertiaryRowArrow} />
             </Link>
           ))}
         </div>
       </div>
 
       {/* Related Articles Section */}
-      <div>
+      <div className={styles.tertiarySectionBlock}>
         <div className={styles.sectionHeadingRow}>
-          <h3 className={styles.sectionTitle}>Related articles</h3>
+          <span className={styles.tertiarySectionTitle}>Related articles</span>
           <Link href="/search?tab=articles" className={styles.viewAllSmallLink}>
             View all →
           </Link>
         </div>
 
-        <div className={styles.secondaryCardsList}>
+        <div className={styles.tertiaryListRows}>
           {articles.map((art) => (
             <Link
               key={art.id}
               href={`/search?q=${encodeURIComponent(art.title)}`}
-              className={styles.secondaryItemCard}
+              className={styles.tertiaryListRow}
             >
-              <div className={styles.secondaryItemLeft}>
-                <div className={styles.itemIconBox}>
+              <div className={styles.tertiaryRowLeft}>
+                <span className={styles.tertiaryRowIcon}>
                   {renderArticleIcon(art.iconType)}
-                </div>
-                <div className={styles.itemMeta}>
-                  <div className={styles.itemTitle}>{art.title}</div>
-                  <div className={styles.itemSubtitle}>
+                </span>
+                <div className={styles.tertiaryRowMeta}>
+                  <div className={styles.tertiaryRowTitle}>{art.title}</div>
+                  <div className={styles.tertiaryRowSubtitle}>
                     {art.readTime} · {art.category}
                   </div>
                 </div>
               </div>
-              <ArrowRight size={14} className={styles.itemArrow} />
+              <ArrowRight size={13} className={styles.tertiaryRowArrow} />
             </Link>
           ))}
         </div>

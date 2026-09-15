@@ -16,7 +16,7 @@ export default function SecondaryResults({
   return (
     <div className={styles.relatedSpecialtiesSection}>
       <div className={styles.relatedSectionHeader}>
-        <h3 className={styles.relatedSectionTitle}>Related specialties & care</h3>
+        <span className={styles.relatedSectionTitle}>RELATED SPECIALTIES & CARE</span>
       </div>
 
       <div className={styles.relatedTagsGroup}>
