@@ -129,14 +129,18 @@ export default function SearchResultsCanvas({
       {/* Red Horizon Divider */}
       <div className={styles.redDivider} />
 
-      {/* 2-Column Weighted Split Layout (Primary: 62%, Tertiary Right Rail: 38%) */}
+      {/* Main Search Result Heading (Above Split Layout) */}
+      <div className={styles.resultsCategoryHeader}>
+        <h2 className={styles.resultsCategoryTitle}>{results.categoryTitle}</h2>
+        <div className={styles.resultsCategorySub}>{results.matchCountText}</div>
+      </div>
+
+      {/* 2-Column Weighted Split Layout (Primary: ~65%, Tertiary Right Rail: ~35%) */}
       <div className={styles.resultsSplitLayout}>
         {/* ── LEFT COLUMN: Dominant Primary Results & Secondary Related Care ── */}
         <div className={styles.resultsLeftCol}>
-          {/* PRIMARY: Dominant Doctor Cards (60-65% width) */}
+          {/* PRIMARY: Dominant Doctor Cards */}
           <PrimaryResults
-            categoryTitle={results.categoryTitle}
-            matchCountText={results.matchCountText}
             pulseRecommendationText={results.pulseRecommendationText}
             doctors={results.doctors}
             selectedLocation={selectedLocation}
@@ -151,7 +155,7 @@ export default function SearchResultsCanvas({
           />
         </div>
 
-        {/* ── RIGHT COLUMN: Tertiary Supporting Results with Independent Scroll ── */}
+        {/* ── RIGHT COLUMN: Tertiary Supporting Results (Vertically aligned with RECOMMENDED DOCTORS) ── */}
         <TertiaryResults
           treatments={results.treatments}
           articles={results.articles}

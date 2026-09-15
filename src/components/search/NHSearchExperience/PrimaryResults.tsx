@@ -7,8 +7,6 @@ import styles from "./NHSearchExperience.module.css";
 import { DoctorCardData } from "./searchData";
 
 interface PrimaryResultsProps {
-  categoryTitle: string;
-  matchCountText: string;
   pulseRecommendationText: string;
   doctors: DoctorCardData[];
   selectedLocation: string;
@@ -17,8 +15,6 @@ interface PrimaryResultsProps {
 }
 
 export default function PrimaryResults({
-  categoryTitle,
-  matchCountText,
   pulseRecommendationText,
   doctors,
   selectedLocation,
@@ -27,29 +23,8 @@ export default function PrimaryResults({
 }: PrimaryResultsProps) {
   return (
     <div className={styles.primaryResultsSection}>
-      {/* Category Header Row */}
-      <div className={styles.resultsCategoryHeader}>
-        <div>
-          <h2 className={styles.resultsCategoryTitle}>{categoryTitle}</h2>
-          <div className={styles.resultsCategorySub}>{matchCountText}</div>
-        </div>
-
-        {/* Pulse AI Recommendation Pill */}
-        {pulseRecommendationText && (
-          <div className={styles.pulseAiCard}>
-            <span className={styles.pulseAiCardText}>{pulseRecommendationText}</span>
-            <button
-              type="button"
-              className={styles.askPulseBtn}
-              onClick={onAskPulse}
-            >
-              Ask Pulse
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className={styles.recommendedSectionLabel}>Recommended doctors</div>
+      {/* RECOMMENDED DOCTORS label directly above the doctor cards */}
+      <div className={styles.recommendedSectionLabel}>RECOMMENDED DOCTORS</div>
 
       {/* Clean Doctor Cards 2-Column Grid */}
       <div className={styles.doctorsGrid}>
@@ -83,7 +58,7 @@ export default function PrimaryResults({
         ))}
       </div>
 
-      {/* Clean Text Link for View All Doctors (No button/box) */}
+      {/* Clean Text Link for View All Doctors */}
       <div className={styles.viewAllDoctorsRow}>
         <Link
           href={`/doctors?q=${encodeURIComponent(query)}&city=${encodeURIComponent(selectedLocation)}`}
@@ -93,6 +68,21 @@ export default function PrimaryResults({
           <ArrowRight size={15} />
         </Link>
       </div>
+
+      {/* Optional Pulse AI Nudge (Below doctors, non-intrusive) */}
+      {pulseRecommendationText && (
+        <div className={styles.pulseNudgeRow}>
+          <span className={styles.pulseNudgeText}>{pulseRecommendationText}</span>
+          <button
+            type="button"
+            className={styles.pulseNudgeBtn}
+            onClick={onAskPulse}
+          >
+            <span>Ask Pulse</span>
+            <ArrowRight size={13} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

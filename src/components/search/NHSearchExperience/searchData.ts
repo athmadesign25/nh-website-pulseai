@@ -336,9 +336,9 @@ export function getPredictiveCompletion(typedText: string): PredictiveState | nu
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const CARDIOLOGY_RESULTS: SearchResultsData = {
-  categoryTitle: "Cardiologists in Bangalore",
+  categoryTitle: "Recommended doctors in Bangalore",
   matchCountText: "24 doctors match your search",
-  pulseRecommendationText: "Get customise recommendation with Pulse ai",
+  pulseRecommendationText: "Want a more personalised recommendation?",
   doctors: [
     {
       id: "doc-devi-shetty",
@@ -564,6 +564,6 @@ export async function getSearchResults(
   // Default to cardiology results
   return {
     ...CARDIOLOGY_RESULTS,
-    categoryTitle: `Cardiologists in ${location}`,
+    categoryTitle: `Recommended doctors in ${location}`,
   };
 }

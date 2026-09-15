@@ -38,18 +38,16 @@ export default function SkeletonResultsCanvas({ query }: SkeletonResultsCanvasPr
       {/* Red Horizon Divider */}
       <div className={styles.redDivider} />
 
+      {/* Main Search Result Heading Skeleton */}
+      <div className={styles.resultsCategoryHeader}>
+        <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 240, height: 22 }} />
+        <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 140, height: 14, marginTop: 4 }} />
+      </div>
+
       {/* Two Column Skeleton Grid */}
       <div className={styles.resultsSplitLayout}>
         {/* Left Column Skeleton */}
         <div className={styles.resultsLeftCol}>
-          <div className={styles.resultsCategoryHeader}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 220, height: 22 }} />
-              <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 140, height: 14 }} />
-            </div>
-            <div className={`${styles.skeletonPill} ${styles.shimmer}`} style={{ width: 180, height: 30 }} />
-          </div>
-
           <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 130, height: 12, marginBottom: 12 }} />
 
           {/* 4 Doctor Skeletons */}
@@ -72,6 +70,9 @@ export default function SkeletonResultsCanvas({ query }: SkeletonResultsCanvasPr
 
           <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 110, height: 14, marginTop: 18 }} />
 
+          {/* Pulse AI Nudge Skeleton */}
+          <div className={`${styles.skeletonPill} ${styles.shimmer}`} style={{ width: "100%", height: 42, borderRadius: 10, marginTop: 24 }} />
+
           {/* Specialties Skeleton Tags */}
           <div className={styles.relatedSpecialtiesSection}>
             <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 160, height: 12, marginBottom: 12 }} />
@@ -86,7 +87,7 @@ export default function SkeletonResultsCanvas({ query }: SkeletonResultsCanvasPr
         {/* Right Column Skeleton */}
         <div className={styles.resultsRightCol}>
           <div className={styles.tertiarySectionBlock}>
-            <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 140, height: 13, marginBottom: 10 }} />
+            <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 140, height: 12, marginBottom: 12 }} />
             <div className={styles.tertiaryListRows}>
               {[1, 2, 3].map((i) => (
                 <div key={i} className={styles.skeletonSecondaryCard}>
