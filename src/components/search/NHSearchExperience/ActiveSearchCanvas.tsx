@@ -259,20 +259,36 @@ export default function ActiveSearchCanvas({
       {!prediction && query.trim().length === 0 && (
         <div className={styles.emptyCanvasPrompt}>
           <div className={styles.emptyPromptTitle}>
-            <Sparkles size={16} className={styles.sparkleIcon} />
-            <span>Search Narayana Health</span>
+            <Sparkles size={15} className={styles.sparkleIcon} />
+            <span>Start typing anything related to your care.</span>
           </div>
           <p className={styles.emptyPromptSub}>
-            Start typing a symptom, condition, specialty, procedure or doctor name.
+            Symptoms · Conditions · Specialists · Procedures · Doctors
           </p>
           <div className={styles.genericCategoriesRow}>
-            <span className={styles.genericCatPill}>Symptoms</span>
+            <button
+              type="button"
+              className={styles.genericExampleChip}
+              onClick={() => onQueryChange("Find a doctor")}
+            >
+              Find a doctor
+            </button>
             <span className={styles.genericDot}>·</span>
-            <span className={styles.genericCatPill}>Conditions</span>
+            <button
+              type="button"
+              className={styles.genericExampleChip}
+              onClick={() => onQueryChange("Knee pain")}
+            >
+              Knee pain
+            </button>
             <span className={styles.genericDot}>·</span>
-            <span className={styles.genericCatPill}>Specialists</span>
-            <span className={styles.genericDot}>·</span>
-            <span className={styles.genericCatPill}>Procedures</span>
+            <button
+              type="button"
+              className={styles.genericExampleChip}
+              onClick={() => onQueryChange("Health checkup")}
+            >
+              Health checkup
+            </button>
           </div>
         </div>
       )}
@@ -280,41 +296,36 @@ export default function ActiveSearchCanvas({
       {/* ── LIVE PREDICTIVE SECTION (When user types any character) ── */}
       {prediction && (
         <div className={styles.suggestionsSection}>
-          <div className={styles.suggestionsHeaderRow}>
-            <span className={styles.suggestionsHeader}>SUGGESTED PREDICTIONS</span>
-            <span className={styles.intentTagBadge}>
-              {prediction.intentLabel}
-            </span>
-          </div>
-
-          <div className={styles.suggestionsList} role="listbox">
-            {prediction.suggestions.map((sug, idx) => (
-              <button
-                key={sug}
-                type="button"
-                className={`${styles.suggestionItem} ${
-                  selectedSugIndex === idx ? styles.suggestionItemActive : ""
-                }`}
-                onClick={() => onSubmit(sug)}
-                onMouseEnter={() => setSelectedSugIndex(idx)}
-                role="option"
-                aria-selected={selectedSugIndex === idx}
-              >
-                <ArrowRight size={15} className={styles.suggestionArrow} />
-                <span className={styles.suggestionText}>
-                  {sug}
-                </span>
-                <span className={styles.pressEnterHint}>
-                  <CornerDownLeft size={12} />
-                </span>
-              </button>
-            ))}
-          </div>
+          {prediction.suggestions.length > 0 && (
+            <div className={styles.suggestionsList} role="listbox">
+              {prediction.suggestions.slice(0, 2).map((sug, idx) => (
+                <button
+                  key={sug}
+                  type="button"
+                  className={`${styles.suggestionItem} ${
+                    selectedSugIndex === idx ? styles.suggestionItemActive : ""
+                  }`}
+                  onClick={() => onSubmit(sug)}
+                  onMouseEnter={() => setSelectedSugIndex(idx)}
+                  role="option"
+                  aria-selected={selectedSugIndex === idx}
+                >
+                  <ArrowRight size={14} className={styles.suggestionArrow} />
+                  <span className={styles.suggestionText}>
+                    {sug}
+                  </span>
+                  <span className={styles.pressEnterHint}>
+                    <CornerDownLeft size={12} />
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Pulse AI Status */}
           <div className={styles.pulseStatusRow}>
-            <Sparkles size={16} className={styles.sparkleIcon} />
-            <span>Intelligently preparing matches…</span>
+            <Sparkles size={15} className={styles.sparkleIcon} />
+            <span>Pulse understands what you&apos;re trying to say</span>
           </div>
         </div>
       )}

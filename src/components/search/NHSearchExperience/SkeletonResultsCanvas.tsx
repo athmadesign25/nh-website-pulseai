@@ -26,13 +26,16 @@ export default function SkeletonResultsCanvas({ query }: SkeletonResultsCanvasPr
         <div className={`${styles.skeletonCircle} ${styles.shimmer}`} style={{ width: 32, height: 32, borderRadius: 8 }} />
       </div>
 
-      {/* Query Bar */}
+      {/* Query Bar with subtle Pulse AI finding care status */}
       <div className={styles.resultsQueryBar}>
         <div className={styles.resultsQueryLeft}>
           <div className={`${styles.skeletonCircle} ${styles.shimmer}`} style={{ width: 22, height: 22 }} />
-          <span className={styles.resultsQueryText}>{query || "Searching Narayana Health..."}</span>
+          <span className={styles.resultsQueryText}>{query || "Finding the right care for you…"}</span>
         </div>
-        <div className={`${styles.skeletonBar} ${styles.shimmer}`} style={{ width: 80, height: 16 }} />
+        <div className={styles.skeletonLoadingStatus}>
+          <span className={styles.skeletonPulseDot} />
+          <span>Finding the right care for you…</span>
+        </div>
       </div>
 
       {/* Red Horizon Divider */}
