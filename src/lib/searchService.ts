@@ -435,7 +435,8 @@ export async function searchHealthcare(
   cityId: number | null,
   signal?: AbortSignal
 ): Promise<NormalizedResults> {
-  const url = new URL("/api/search", window.location.origin);
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3005";
+  const url = new URL("/api/search", origin);
   url.searchParams.set("query", query.trim());
   if (cityId !== null) url.searchParams.set("cityId", String(cityId));
 

@@ -128,7 +128,6 @@ export default function DefaultSearchPrompt({
           <button
             type="button"
             className={styles.standaloneIconBtn}
-            style={isWhite ? { color: "rgba(15, 23, 42, 0.55)" } : undefined}
             aria-label="Attach medical records or file"
             onClick={(e) => {
               e.stopPropagation();
@@ -144,32 +143,54 @@ export default function DefaultSearchPrompt({
             onSelectLocation={onSelectLocation}
           />
 
-          {/* Quick Action: Find a doctor - lightweight icon + text, no box */}
+          {/* Quick Action: Find a doctor - unboxed clean text + icon, NO border/box */}
           <button
             type="button"
-            className={styles.inlineActionBtn}
-            style={isWhite ? { color: "rgba(15, 23, 42, 0.65)", fontWeight: 400 } : undefined}
+            className={styles.landingTextAction}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "none",
+              backgroundColor: "transparent",
+              border: "none",
+              outline: "none",
+              padding: "0 4px",
+              color: "#FFFFFF",
+              cursor: "pointer",
+            }}
             onClick={(e) => {
               e.stopPropagation();
               onSelectActionPill("doctor");
             }}
           >
-            <User size={14} className={styles.inlineActionIcon} style={isWhite ? { color: "rgba(15, 23, 42, 0.50)" } : undefined} />
-            <span>Find a doctor</span>
+            <User size={14} style={{ color: "rgba(255, 255, 255, 0.88)" }} />
+            <span style={{ color: "#FFFFFF", fontWeight: 450, fontSize: "13.5px" }}>Find a doctor</span>
           </button>
 
-          {/* Quick Action: Describe my symptoms - lightweight icon + text, no box */}
+          {/* Quick Action: Describe my symptoms - unboxed clean text + icon, NO border/box */}
           <button
             type="button"
-            className={styles.inlineActionBtn}
-            style={isWhite ? { color: "rgba(15, 23, 42, 0.65)", fontWeight: 400 } : undefined}
+            className={styles.landingTextAction}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "none",
+              backgroundColor: "transparent",
+              border: "none",
+              outline: "none",
+              padding: "0 4px",
+              color: "#FFFFFF",
+              cursor: "pointer",
+            }}
             onClick={(e) => {
               e.stopPropagation();
               onSelectActionPill("symptoms");
             }}
           >
-            <Heart size={14} className={styles.inlineActionIcon} style={isWhite ? { color: "rgba(15, 23, 42, 0.50)" } : undefined} />
-            <span>Describe my symptoms</span>
+            <Heart size={14} style={{ color: "rgba(255, 255, 255, 0.88)" }} />
+            <span style={{ color: "#FFFFFF", fontWeight: 450, fontSize: "13.5px" }}>Describe my symptoms</span>
           </button>
         </div>
 
@@ -178,7 +199,6 @@ export default function DefaultSearchPrompt({
           <button
             type="button"
             className={styles.standaloneIconBtn}
-            style={isWhite ? { color: "rgba(15, 23, 42, 0.55)" } : undefined}
             aria-label="Voice search"
             onClick={(e) => {
               e.stopPropagation();
