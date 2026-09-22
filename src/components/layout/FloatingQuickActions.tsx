@@ -202,9 +202,6 @@ export default function FloatingQuickActions() {
           </button>
         </div>
       </div>
-
-
     </>
   );
-}
 
