@@ -204,4 +204,4 @@ export default function FloatingQuickActions() {
       </div>
     </>
   );
-
+}
