@@ -8,11 +8,16 @@ import {
 import styles from "./NHSearchExperience.module.css";
 import { TreatmentItemData, ArticleItemData } from "./searchData";
 
+import PulseAIAvatar from "./PulseAIAvatar";
+
 interface TertiaryResultsProps {
   treatments: TreatmentItemData[];
   articles: ArticleItemData[];
   relatedSpecialties?: string[];
   onSelectSpecialtyTag?: (tag: string) => void;
+  onOpenPulse?: () => void;
+  pulseRowRef?: React.RefObject<HTMLDivElement | null>;
+  pulseRecommendationText?: string;
 }
 
 export default function TertiaryResults({
@@ -20,6 +25,9 @@ export default function TertiaryResults({
   articles,
   relatedSpecialties = [],
   onSelectSpecialtyTag,
+  onOpenPulse,
+  pulseRowRef,
+  pulseRecommendationText,
 }: TertiaryResultsProps) {
   // Show 4 items per category and up to 3 rows of specialties
   const displayedTreatments = treatments.slice(0, 4);
@@ -53,6 +61,52 @@ export default function TertiaryResults({
 
   return (
     <div className={styles.resultsRightCol} aria-label="Supporting discovery and editorial care">
+      {/* ── Pulse AI Personalised Recommendation Banner (Mobile Only: above Secondary Results) ── */}
+      {onOpenPulse && (
+        <div className={styles.mobilePulseRowWrap}>
+          <div
+            ref={pulseRowRef}
+            className={styles.refPulseRow}
+            onClick={onOpenPulse}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") onOpenPulse();
+            }}
+            aria-label="Personalise recommendation with Pulse AI"
+          >
+            <div className={styles.refPulseLeft}>
+              <div className={styles.refPulseIconBox} aria-hidden="true">
+                <PulseAIAvatar size={34} />
+              </div>
+              <div className={styles.refPulseTextWrap}>
+                <div className={styles.refPulseTitleLine}>
+                  <span className={styles.refPulseTitle}>
+                    {pulseRecommendationText || "Personalise recommendation"}
+                  </span>
+                  <span className={styles.refPulseBadge}>PULSE AI</span>
+                </div>
+                <p className={styles.refPulseSubtext}>
+                  Ask clinical questions or get doctor recommendations
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className={styles.refPulseBtn}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenPulse();
+              }}
+            >
+              <span>Ask Pulse AI</span>
+              <ArrowRight size={12} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 1. Treatments & Procedures Section */}
       <div className={styles.editorialSection}>
         <div className={styles.editorialHeadingRow}>

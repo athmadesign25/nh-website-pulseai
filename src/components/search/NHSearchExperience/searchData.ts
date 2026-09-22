@@ -465,7 +465,7 @@ export const CARDIOLOGY_RESULTS: SearchResultsData = {
   proximityTier: "local",
   proximityMessage: "Showing care near Bangalore",
   matchCountText: "Showing care near Bangalore",
-  pulseRecommendationText: "Want a more personalised recommendation?",
+  pulseRecommendationText: "Personalise recommendation",
   doctors: [
     {
       id: "doc-devi-shetty",
@@ -582,7 +582,7 @@ export const ORTHOPAEDICS_RESULTS: SearchResultsData = {
   proximityTier: "local",
   proximityMessage: "Showing care near Bangalore",
   matchCountText: "Showing care near Bangalore",
-  pulseRecommendationText: "Get customise recommendation with Pulse ai",
+  pulseRecommendationText: "Personalise recommendation",
   doctors: [
     {
       id: "doc-prakash",
@@ -859,7 +859,7 @@ export function mapApiResultsToSearchData(
     proximityTier: proximity.tier,
     proximityMessage: proximity.contextMessage,
     matchCountText: proximity.contextMessage,
-    pulseRecommendationText: "Want a more personalised recommendation?",
+    pulseRecommendationText: "Personalise recommendation",
     doctors: mappedDocs,
     relatedSpecialties: Array.from(specSet).slice(0, 8),
     treatments: mappedTreatments,

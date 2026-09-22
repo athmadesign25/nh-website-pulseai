@@ -290,69 +290,75 @@ export default function SearchResultsCanvas({
                 </div>
               </div>
             ) : (
-              /* Standard 2-Column Result Layout */
-              <div className={styles.resultsSplitLayout}>
-                {/* ── LEFT / PRIMARY COLUMN: Recommended Doctors ── */}
-                <div className={styles.resultsLeftCol}>
-                  <PrimaryResults
-                    doctors={currentResults.doctors}
-                    selectedLocation={selectedLocation}
-                    proximityMessage={currentResults.proximityMessage}
-                    query={activeQuery}
+              /* Standard 2-Column Result Layout + Desktop Bottom Pulse Card */
+              <>
+                <div className={styles.resultsSplitLayout}>
+                  {/* ── LEFT / PRIMARY COLUMN: Recommended Doctors ── */}
+                  <div className={styles.resultsLeftCol}>
+                    <PrimaryResults
+                      doctors={currentResults.doctors}
+                      selectedLocation={selectedLocation}
+                      proximityMessage={currentResults.proximityMessage}
+                      query={activeQuery}
+                    />
+                  </div>
+
+                  {/* ── RIGHT / SECONDARY COLUMN: Treatments, Articles & Related Specialties ── */}
+                  <TertiaryResults
+                    treatments={currentResults.treatments}
+                    articles={currentResults.articles}
+                    relatedSpecialties={currentResults.relatedSpecialties}
+                    onSelectSpecialtyTag={onSelectSpecialtyTag}
+                    onOpenPulse={handleOpenPulse}
+                    pulseRowRef={pulseRowRef}
+                    pulseRecommendationText={currentResults.pulseRecommendationText}
                   />
                 </div>
 
-                {/* ── RIGHT / SECONDARY COLUMN: Treatments, Articles & Related Specialties ── */}
-                <TertiaryResults
-                  treatments={currentResults.treatments}
-                  articles={currentResults.articles}
-                  relatedSpecialties={currentResults.relatedSpecialties}
-                  onSelectSpecialtyTag={onSelectSpecialtyTag}
-                />
-              </div>
-            )}
-
-            {/* ── FULL SIZE Ask Pulse Banner at Bottom (Spanning 100% Width) ── */}
-            {results.pulseRecommendationText && (
-              <div
-                ref={pulseRowRef}
-                className={styles.refPulseRow}
-                onClick={handleOpenPulse}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") handleOpenPulse();
-                }}
-                aria-label="Ask Pulse AI for personalised recommendations"
-              >
-                <div className={styles.refPulseLeft}>
-                  <div className={styles.refPulseIconBox} aria-hidden="true">
-                    <PulseAIAvatar size={36} />
-                  </div>
-                  <div className={styles.refPulseTextWrap}>
-                    <div className={styles.refPulseTitleLine}>
-                      <span className={styles.refPulseTitle}>
-                        Want a more personalised recommendation?
-                      </span>
-                      <span className={styles.refPulseBadge}>PULSE AI</span>
+                {/* ── Desktop Web Mode: Pulse AI Personalised Recommendation Banner at Bottom ── */}
+                <div className={styles.desktopPulseRowWrap}>
+                  <div
+                    ref={pulseRowRef}
+                    className={styles.refPulseRow}
+                    onClick={handleOpenPulse}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") handleOpenPulse();
+                    }}
+                    aria-label="Personalise recommendation with Pulse AI"
+                  >
+                    <div className={styles.refPulseLeft}>
+                      <div className={styles.refPulseIconBox} aria-hidden="true">
+                        <PulseAIAvatar size={38} />
+                      </div>
+                      <div className={styles.refPulseTextWrap}>
+                        <div className={styles.refPulseTitleLine}>
+                          <span className={styles.refPulseTitle}>
+                            {currentResults.pulseRecommendationText || "Personalise recommendation"}
+                          </span>
+                          <span className={styles.refPulseBadge}>PULSE AI</span>
+                        </div>
+                        <p className={styles.refPulseSubtext}>
+                          Ask clinical questions or get doctor recommendations
+                        </p>
+                      </div>
                     </div>
-                    <p className={styles.refPulseSubtext}>
-                      Ask clinical questions, describe symptoms, or get tailored specialist recommendations.
-                    </p>
+
+                    <button
+                      type="button"
+                      className={styles.refPulseBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenPulse();
+                      }}
+                    >
+                      <span>Ask Pulse AI</span>
+                      <ArrowRight size={13} />
+                    </button>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  className={styles.refPulseBtn}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenPulse();
-                  }}
-                >
-                  <span>Ask Pulse</span>
-                </button>
-              </div>
+              </>
             )}
           </motion.div>
         )}

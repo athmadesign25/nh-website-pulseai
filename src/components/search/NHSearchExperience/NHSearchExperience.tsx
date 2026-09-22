@@ -98,7 +98,7 @@ export default function NHSearchExperience({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const isMobile = winSize.w < 640;
+  const isMobile = winSize.w <= 900;
 
   // Floating search / Pulse AI modal state (when triggered from docked control in fold 2+)
   const [isDocked, setIsDocked] = useState(false);
@@ -116,26 +116,22 @@ export default function NHSearchExperience({
   const startTop = anchorRect?.top || Math.round(winSize.h * 0.68 - 28);
   const startLeft = anchorRect?.left || Math.round((winSize.w - startWidth) / 2);
 
-  // Minimized search card size (100px x 100px, matches sidebar 3rd button)
-  const compactWidth = 100;
-  const compactHeight = 100;
+  // Minimized search card size (matches center button in bottom nav on mobile, sidebar 3rd button on desktop)
+  const compactWidth = isMobile ? 88 : 100;
+  const compactHeight = isMobile ? 88 : 100;
   const compactRadius = 18;
 
   const squareLeft = Math.round((winSize.w - compactWidth) / 2);
   const squareTopInPlace = Math.round(startTop + (startHeight - compactHeight) / 2);
 
-  // Exact vertical alignment with 3rd button position in side panel:
-  // Since FAB container is positioned at (squareTopInPlace - 202px),
-  // Button 3 is at (squareTopInPlace - 202px + 202px) = squareTopInPlace!
-  // It NEVER moves up or down — pure horizontal motion straight to the right!
+  // Exact vertical alignment with 3rd button position in side panel (desktop) or center bottom nav (mobile):
   const targetButton3Top = isMobile 
-    ? Math.round(winSize.h - 36 - compactHeight) 
+    ? Math.round(winSize.h - 20 - compactHeight) 
     : squareTopInPlace;
 
-  // Horizontal position of 3rd button in side panel (right 24px, width 100px):
-  // left = winW - 24 - 100 = winW - 124px
+  // Horizontal position: Exactly CENTER on mobile (bottom nav bar center), right 24px on desktop:
   const targetButton3Left = isMobile
-    ? Math.round(winSize.w - 16 - compactWidth)
+    ? Math.round((winSize.w - compactWidth) / 2)
     : (winSize.w - 124);
 
   // Broadcast fab-target-top so FloatingQuickActions places Button 3 at exact squareTopInPlace
@@ -152,7 +148,7 @@ export default function NHSearchExperience({
 
   useMotionValueEvent(activeProgress, "change", (latest) => {
     setIsMorphing(latest > 0.02);
-    const docked = latest >= 0.84;
+    const docked = latest >= (isMobile ? 0.78 : 0.84);
     setIsDocked(docked);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("nh:search-docked", { detail: { isDocked: docked } }));
@@ -160,14 +156,14 @@ export default function NHSearchExperience({
   });
 
   // Choreography:
-  // Phase 1 [0.02 - 0.14]: Search bar shrinks in place to 100x100 glassmorphic card at center (squareLeft, squareTopInPlace)
-  // Phase 2 [0.14 - 0.54]: WAITS at center position with dark glassmorphism while hero scales & side panel appears with 2 buttons
-  // Phase 3 [0.54 - 0.84]: HORIZONTAL GLIDE: glides straight across horizontally to targetButton3Left at constant squareTopInPlace
-  // Phase 4 [0.84 - 0.88]: DOCKS & MERGES into 3rd slot, side panel expands to 3 buttons
+  // Phase 1 [0.02 - 0.14]: Search bar shrinks in place to compact glassmorphic card at center (squareLeft, squareTopInPlace)
+  // Phase 2 [0.14 - 0.54]: WAITS at center position with dark glassmorphism while hero scales
+  // Phase 3 [0.54 - 0.84]: GLIDE: On desktop glides to right sidebar; on mobile glides smoothly straight down to bottom center nav bar
+  // Phase 4 [0.84 - 0.88]: DOCKS & MERGES into center position on mobile / 3rd slot on desktop
   const composerTop = useTransform(
     activeProgress,
-    [0.02, 0.14, 0.84],
-    [startTop, squareTopInPlace, targetButton3Top]
+    [0.02, 0.14, 0.54, 0.84],
+    [startTop, squareTopInPlace, squareTopInPlace, targetButton3Top]
   );
 
   const composerLeft = useTransform(
@@ -238,7 +234,7 @@ export default function NHSearchExperience({
   const textColor = useTransform(
     activeProgress,
     [0.54, 0.84],
-    [searchTheme === "white" ? "#1E293B" : "#FFFFFF", "#0B5DF4"]
+    [searchTheme === "white" ? "#1E293B" : "#FFFFFF", "#034EA2"]
   );
 
   // Secondary buttons and prompt cross-fades

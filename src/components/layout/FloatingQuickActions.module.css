@@ -49,12 +49,12 @@
   justify-content: center;
   flex-shrink: 0;
   border-radius: 10px;
-  background: linear-gradient(149deg, rgba(47, 120, 255, 0.62) 0%, rgba(11, 77, 199, 0.72) 100%);
+  background: linear-gradient(149deg, rgba(3, 78, 162, 0.85) 0%, rgba(2, 48, 112, 0.95) 100%);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.62),
     inset 0 -1px 2px rgba(255, 255, 255, 0.20),
     inset 0 0 16px rgba(255, 255, 255, 0.16),
-    0 4px 12px rgba(11, 77, 199, 0.22);
+    0 4px 12px rgba(3, 78, 162, 0.30);
   transition: transform 0.2s ease, background 0.25s ease;
 }
 
@@ -302,36 +302,149 @@
   transform: scale(1.03);
 }
 
-/* ── Responsive styles (Mobile & Tablet) ── */
+/* ── Responsive styles (Mobile & Tablet: Horizontal Bottom Navigation Bar) ── */
 @media (max-width: 900px) {
   .container {
-    display: none !important; /* Replaced entirely by the morphing NHSearchExperience on mobile */
-    top: auto;
-    bottom: max(16px, env(safe-area-inset-bottom));
-    right: 16px;
-    left: 16px;
-    width: calc(100% - 32px);
-    flex-direction: row;
-    align-items: stretch;
-    border-radius: 20px;
+    display: flex !important;
+    position: fixed !important;
+    top: auto !important;
+    bottom: max(14px, env(safe-area-inset-bottom)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateY(0) !important;
+    width: calc(100vw - 32px) !important;
+    max-width: 380px !important;
+    height: 66px !important;
+    max-height: 66px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    padding: 6px 10px !important;
+    border-radius: 22px !important;
+    background: rgba(255, 255, 255, 0.90) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 
+      0 12px 34px rgba(5, 20, 45, 0.16),
+      0 2px 8px rgba(0, 0, 0, 0.06),
+      inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
+    z-index: 9000 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease !important;
+  }
+
+  .containerDark {
+    background: rgba(15, 23, 42, 0.88) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 
+      0 16px 40px rgba(0, 0, 0, 0.40),
+      inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
   }
 
   .hidden {
-    transform: translateY(150%);
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateX(-50%) translateY(140%) !important;
   }
 
   .visible {
-    transform: translateY(0);
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateX(-50%) translateY(0) !important;
   }
 
   .visible:hover {
-    transform: translateY(0) scale(1.02);
+    transform: translateX(-50%) translateY(0) scale(1.01) !important;
   }
 
   .link {
-    flex: 1;
-    flex-direction: row;
-    padding: 8px;
-    gap: 8px;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    padding: 4px 6px !important;
+    border-radius: 12px !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+  }
+
+  /* 1st Tab: Book Appointment */
+  .bookAction {
+    order: 1 !important;
+  }
+
+  /* 2nd Tab: Pulse AI Search (CENTRAL POSITIONING) */
+  .thirdActionSlot {
+    display: flex !important;
+    order: 2 !important;
+    flex: 1.15 !important;
+    max-height: 72px !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    overflow: visible !important;
+  }
+
+  .slotCollapsed,
+  .slotExpanded {
+    max-height: 72px !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  .pulseSearchAction {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    padding: 4px 6px !important;
+    width: 100% !important;
+  }
+
+  .pulseIconWrap {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 11px !important;
+    box-shadow: 
+      0 4px 14px rgba(3, 78, 162, 0.40),
+      inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+  }
+
+  /* 3rd Tab: Download NH App */
+  .appAction {
+    order: 3 !important;
+  }
+
+  .iconWrap {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 9px !important;
+  }
+
+  .calendarIconClip {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  .actionLabel {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .desktopBr {
+    display: none !important;
   }
 }

@@ -38,6 +38,7 @@ export default function FloatingQuickActions() {
   const [isSearchDocked, setIsSearchDocked] = useState(false);
   const [darkLinks, setDarkLinks] = useState<boolean[]>([false, false, false]);
   const [containerTop, setContainerTop] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const linkRef0 = useRef<HTMLAnchorElement>(null);
@@ -48,6 +49,15 @@ export default function FloatingQuickActions() {
   const nhAppIconLottieRef = useRef<LottieRefCurrentProps>(null);
   const calendarHover = useHoverLoop(calendarLottieRef);
   const nhAppIconHover = useHoverLoop(nhAppIconLottieRef);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 900);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     const updatePosition = (e?: Event) => {
@@ -94,9 +104,18 @@ export default function FloatingQuickActions() {
 
   useEffect(() => {
     const handleScrollAndTheme = () => {
-      // Quick Health Actions Bar appears as the user scrolls past hero (at ~35% scroll, showing 2 buttons)
-      const showQuickActions = window.scrollY >= window.innerHeight * 0.35;
+      const mobile = window.innerWidth <= 900;
+      // On mobile, show horizontal bottom nav bar once user scrolls past hero (scrollY >= 160 or 25% height)
+      // On desktop, quick actions appear past hero (~35% scroll)
+      const threshold = mobile
+        ? Math.min(180, window.innerHeight * 0.25)
+        : window.innerHeight * 0.35;
+      const showQuickActions = window.scrollY >= threshold;
       setIsQuickActionsVisible(showQuickActions);
+
+      if (mobile) {
+        setIsSearchDocked(showQuickActions);
+      }
 
       if (!showQuickActions || !containerRef.current) return;
 
@@ -177,7 +196,7 @@ export default function FloatingQuickActions() {
 
   return (
     <>
-      {/* Consistent Vertical Floating Utility Group on the Right Side */}
+      {/* Floating Utility Group: Vertical on Desktop, Horizontal Bottom Navigation Bar on Mobile */}
       <div
         ref={containerRef}
         role="region"
@@ -187,12 +206,12 @@ export default function FloatingQuickActions() {
         } ${isSearchDocked ? styles.dockedThreeButtons : styles.dockedTwoButtons} ${
           isContainerDark ? styles.containerDark : ""
         }`}
-        style={containerTop !== null ? { top: `${containerTop}px` } : undefined}
+        style={(!isMobile && containerTop !== null) ? { top: `${containerTop}px` } : undefined}
       >
-        {/* Action 1: Book Appointment (Primary utility) */}
+        {/* Action 1: Book Appointment (1st position on mobile and desktop) */}
         <Link
           ref={linkRef0}
-          className={`${styles.link} ${darkLinks[0] ? styles.linkOnDark : ""}`}
+          className={`${styles.link} ${styles.bookAction} ${darkLinks[0] ? styles.linkOnDark : ""}`}
           href="/find-a-doctor"
           onMouseEnter={calendarHover.onMouseEnter}
           onMouseLeave={calendarHover.onMouseLeave}
@@ -210,13 +229,13 @@ export default function FloatingQuickActions() {
               />
             </span>
           </span>
-          <span className={styles.actionLabel}>Book<br />Appointment</span>
+          <span className={styles.actionLabel}>Book<br className={styles.desktopBr} /> Appointment</span>
         </Link>
 
-        {/* Action 2: Download NH App (Secondary utility) */}
+        {/* Action 2: Download NH App (3rd on mobile, 2nd on desktop) */}
         <Link
           ref={linkRef1}
-          className={`${styles.link} ${darkLinks[1] ? styles.linkOnDark : ""}`}
+          className={`${styles.link} ${styles.appAction} ${darkLinks[1] ? styles.linkOnDark : ""}`}
           href="#app-download-banner"
           onMouseEnter={nhAppIconHover.onMouseEnter}
           onMouseLeave={nhAppIconHover.onMouseLeave}
@@ -232,14 +251,14 @@ export default function FloatingQuickActions() {
               aria-hidden
             />
           </span>
-          <span className={styles.actionLabel}>Download<br />NH App</span>
+          <span className={styles.actionLabel}>Download<br className={styles.desktopBr} /> NH App</span>
         </Link>
 
-        {/* Action 3: Pulse AI Search (Merges into 3rd position as liquid droplet) */}
+        {/* Action 3: Pulse AI Search (CENTER 2nd position on mobile, 3rd on desktop) */}
         <div 
           className={`${styles.thirdActionSlot} ${isSearchDocked ? styles.slotExpanded : styles.slotCollapsed}`}
           style={{
-            display: isSearchDocked ? "flex" : "none",
+            display: (isMobile || isSearchDocked) ? "flex" : "none",
           }}
         >
           <button
@@ -260,7 +279,7 @@ export default function FloatingQuickActions() {
                 <span className={styles.pulseBar3} />
               </span>
             </span>
-            <span className={styles.actionLabel}>Pulse AI<br />Search</span>
+            <span className={styles.actionLabel}>Pulse AI<br className={styles.desktopBr} /> Search</span>
           </button>
         </div>
       </div>
