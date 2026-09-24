@@ -18,6 +18,7 @@ interface TertiaryResultsProps {
   onOpenPulse?: () => void;
   pulseRowRef?: React.RefObject<HTMLDivElement | null>;
   pulseRecommendationText?: string;
+  query?: string;
 }
 
 export default function TertiaryResults({
@@ -25,9 +26,7 @@ export default function TertiaryResults({
   articles,
   relatedSpecialties = [],
   onSelectSpecialtyTag,
-  onOpenPulse,
-  pulseRowRef,
-  pulseRecommendationText,
+  query = "",
 }: TertiaryResultsProps) {
   // Show 4 items per category and up to 3 rows of specialties
   const displayedTreatments = treatments.slice(0, 4);
@@ -59,59 +58,16 @@ export default function TertiaryResults({
     return <Shield size={15} className={styles.editorialIconMono} />;
   };
 
+  const treatmentsViewAllHref = `/search?tab=treatments${query ? `&q=${encodeURIComponent(query)}` : ""}`;
+  const articlesViewAllHref = `/search?tab=articles${query ? `&q=${encodeURIComponent(query)}` : ""}`;
+
   return (
     <div className={styles.resultsRightCol} aria-label="Supporting discovery and editorial care">
-      {/* ── Pulse AI Personalised Recommendation Banner (Mobile Only: above Secondary Results) ── */}
-      {onOpenPulse && (
-        <div className={styles.mobilePulseRowWrap}>
-          <div
-            ref={pulseRowRef}
-            className={styles.refPulseRow}
-            onClick={onOpenPulse}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") onOpenPulse();
-            }}
-            aria-label="Personalise recommendation with Pulse AI"
-          >
-            <div className={styles.refPulseLeft}>
-              <div className={styles.refPulseIconBox} aria-hidden="true">
-                <PulseAIAvatar size={34} />
-              </div>
-              <div className={styles.refPulseTextWrap}>
-                <div className={styles.refPulseTitleLine}>
-                  <span className={styles.refPulseTitle}>
-                    {pulseRecommendationText || "Personalise recommendation"}
-                  </span>
-                  <span className={styles.refPulseBadge}>PULSE AI</span>
-                </div>
-                <p className={styles.refPulseSubtext}>
-                  Ask clinical questions or get doctor recommendations
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className={styles.refPulseBtn}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenPulse();
-              }}
-            >
-              <span>Ask Pulse AI</span>
-              <ArrowRight size={12} />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* 1. Treatments & Procedures Section */}
       <div className={styles.editorialSection}>
         <div className={styles.editorialHeadingRow}>
           <span className={styles.sectionEyebrowTitle}>TREATMENTS & PROCEDURES</span>
-          <Link href="/treatments" className={styles.editorialHeaderViewAll}>
+          <Link href={treatmentsViewAllHref} className={styles.editorialHeaderViewAll}>
             <span>View all</span>
             <ArrowRight size={11} />
           </Link>
@@ -121,7 +77,7 @@ export default function TertiaryResults({
           {displayedTreatments.map((t) => (
             <Link
               key={t.id}
-              href={`/search?q=${encodeURIComponent(t.title)}`}
+              href={`/search?tab=treatments&q=${encodeURIComponent(t.title)}`}
               className={styles.editorialItem}
             >
               <div className={styles.editorialItemLeft}>
@@ -143,7 +99,7 @@ export default function TertiaryResults({
       <div className={styles.editorialSection}>
         <div className={styles.editorialHeadingRow}>
           <span className={styles.sectionEyebrowTitle}>RELATED ARTICLES</span>
-          <Link href="/articles" className={styles.editorialHeaderViewAll}>
+          <Link href={articlesViewAllHref} className={styles.editorialHeaderViewAll}>
             <span>View all</span>
             <ArrowRight size={11} />
           </Link>
@@ -153,7 +109,7 @@ export default function TertiaryResults({
           {displayedArticles.map((art, idx) => (
             <Link
               key={art.id}
-              href={`/search?q=${encodeURIComponent(art.title)}`}
+              href={`/search?tab=articles&q=${encodeURIComponent(art.title)}`}
               className={styles.editorialItem}
             >
               <div className={styles.editorialItemLeft}>

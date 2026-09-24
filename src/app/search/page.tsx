@@ -779,9 +779,18 @@ function SearchResultsContent() {
   
   const initialQuery = searchParams.get("q") || searchParams.get("search") || "";
   const initialLocation = searchParams.get("location") || "All";
+  const initialTab = searchParams.get("tab") || "doctors";
   const [query, setQuery] = useState(initialQuery);
   const [location, setLocation] = useState(initialLocation);
-  const [activeTab, setActiveTab] = useState("doctors");
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync activeTab when query string changes
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && ["doctors", "specialties", "packages_tests", "treatments", "articles"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Filter State
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);

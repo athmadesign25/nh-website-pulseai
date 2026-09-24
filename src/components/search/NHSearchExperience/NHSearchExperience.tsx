@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, useTransform, useMotionValueEvent, MotionValue } from "framer-motion";
 import { Search, X } from "lucide-react";
+import Lottie from "lottie-react";
+import pulseAnimation from "../../../../public/assets/pulse animation.json";
 import styles from "./NHSearchExperience.module.css";
 import DefaultSearchPrompt from "./DefaultSearchPrompt";
 import ActiveSearchCanvas from "./ActiveSearchCanvas";
@@ -108,30 +111,38 @@ export default function NHSearchExperience({
   // Motion values for continuous morphing
   const hasScroll = Boolean(scrollProgress);
   const defaultProgress = useMotionValue(0);
-  const activeProgress = scrollProgress || defaultProgress;
+  const baseProgress = scrollProgress || defaultProgress;
+
+  // Accelerate the scroll animation on mobile so it completes in 40% of the normal distance
+  // This makes the transition to FAB feel much cleaner and more responsive to a single swipe
+  const fastMobileProgress = useTransform(baseProgress, [0, 0.4], [0, 1]);
+  const activeProgress = isMobile ? fastMobileProgress : baseProgress;
 
   // Starting dimensions (Hero anchor)
-  const startWidth = anchorRect?.width || Math.min(840, winSize.w - 48);
-  const startHeight = anchorRect?.height || 136;
-  const startTop = anchorRect?.top || Math.round(winSize.h * 0.68 - 28);
-  const startLeft = anchorRect?.left || Math.round((winSize.w - startWidth) / 2);
+  const isPhone = winSize.w <= 640;
+  const startWidth = isMobile ? Math.min(winSize.w - 32, 600) : (anchorRect?.width || Math.min(840, winSize.w - 48));
+  const startHeight = anchorRect ? (isMobile ? 130 : anchorRect.height) : (isMobile ? 130 : 136);
+  const startTop = isMobile 
+    ? (winSize.h > 0 ? winSize.h - 36 - startHeight : 500)
+    : (anchorRect ? anchorRect.top : (winSize.h > 0 ? winSize.h / 2 - 72 : 300));
+  const startLeft = isMobile ? Math.round((winSize.w - startWidth) / 2) : (anchorRect?.left || Math.round((winSize.w - startWidth) / 2));
 
-  // Minimized search card size (matches center button in bottom nav on mobile, sidebar 3rd button on desktop)
-  const compactWidth = isMobile ? 88 : 100;
-  const compactHeight = isMobile ? 88 : 100;
+  // Minimized search card size
+  const compactWidth = isMobile ? winSize.w - 32 : 100;
+  const compactHeight = isMobile ? 80 : 100;
   const compactRadius = 18;
 
   const squareLeft = Math.round((winSize.w - compactWidth) / 2);
   const squareTopInPlace = Math.round(startTop + (startHeight - compactHeight) / 2);
 
-  // Exact vertical alignment with 3rd button position in side panel (desktop) or center bottom nav (mobile):
+  // Exact vertical alignment with 3rd button position in side panel (desktop) or bottom nav bar (mobile):
   const targetButton3Top = isMobile 
-    ? Math.round(winSize.h - 20 - compactHeight) 
+    ? Math.round(winSize.h - 36 - compactHeight) 
     : squareTopInPlace;
 
-  // Horizontal position: Exactly CENTER on mobile (bottom nav bar center), right 24px on desktop:
+  // Horizontal position: Exactly centered on mobile (16px margins), right 24px on desktop:
   const targetButton3Left = isMobile
-    ? Math.round((winSize.w - compactWidth) / 2)
+    ? Math.round(winSize.w - 16 - compactWidth)
     : (winSize.w - 124);
 
   // Broadcast fab-target-top so FloatingQuickActions places Button 3 at exact squareTopInPlace
@@ -148,7 +159,7 @@ export default function NHSearchExperience({
 
   useMotionValueEvent(activeProgress, "change", (latest) => {
     setIsMorphing(latest > 0.02);
-    const docked = latest >= (isMobile ? 0.78 : 0.84);
+    const docked = latest >= 0.84;
     setIsDocked(docked);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("nh:search-docked", { detail: { isDocked: docked } }));
@@ -160,91 +171,87 @@ export default function NHSearchExperience({
   // Phase 2 [0.14 - 0.54]: WAITS at center position with dark glassmorphism while hero scales
   // Phase 3 [0.54 - 0.84]: GLIDE: On desktop glides to right sidebar; on mobile glides smoothly straight down to bottom center nav bar
   // Phase 4 [0.84 - 0.88]: DOCKS & MERGES into center position on mobile / 3rd slot on desktop
-  const composerTop = useTransform(
-    activeProgress,
-    [0.02, 0.14, 0.54, 0.84],
-    [startTop, squareTopInPlace, squareTopInPlace, targetButton3Top]
-  );
+  const targetTopRange = isMobile
+    ? [startTop, startTop + (targetButton3Top - startTop) * 0.15, startTop + (targetButton3Top - startTop) * 0.63, targetButton3Top]
+    : [startTop, squareTopInPlace, squareTopInPlace, targetButton3Top];
+  const composerTop = useTransform(activeProgress, [0.02, 0.14, 0.54, 0.84], targetTopRange);
 
-  const composerLeft = useTransform(
-    activeProgress,
-    [0.02, 0.14, 0.54, 0.84],
-    [startLeft, squareLeft, squareLeft, targetButton3Left]
-  );
+  const targetLeftRange = isMobile
+    ? [startLeft, startLeft + (targetButton3Left - startLeft) * 0.15, startLeft + (targetButton3Left - startLeft) * 0.63, targetButton3Left]
+    : [startLeft, squareLeft, squareLeft, targetButton3Left];
+  const composerLeft = useTransform(activeProgress, [0.02, 0.14, 0.54, 0.84], targetLeftRange);
 
-  const composerWidth = useTransform(
-    activeProgress,
-    [0.02, 0.14, 0.84],
-    [startWidth, compactWidth, compactWidth]
-  );
+  const targetWidthRange = isMobile
+    ? [startWidth, startWidth + (compactWidth - startWidth) * 0.15, startWidth + (compactWidth - startWidth) * 0.63, compactWidth]
+    : [startWidth, compactWidth, compactWidth, compactWidth];
+  const composerWidth = useTransform(activeProgress, [0.02, 0.14, 0.54, 0.84], targetWidthRange);
 
-  const composerHeight = useTransform(
-    activeProgress,
-    [0.02, 0.14, 0.84],
-    [startHeight, compactHeight, compactHeight]
-  );
+  const targetHeightRange = isMobile
+    ? [startHeight, startHeight + (compactHeight - startHeight) * 0.15, startHeight + (compactHeight - startHeight) * 0.63, compactHeight]
+    : [startHeight, compactHeight, compactHeight, compactHeight];
+  const composerHeight = useTransform(activeProgress, [0.02, 0.14, 0.54, 0.84], targetHeightRange);
 
-  const composerRadius = useTransform(
-    activeProgress,
-    [0.02, 0.14, 0.84],
-    [20, compactRadius, compactRadius]
-  );
+  const targetRadiusRange = isMobile
+    ? [20, 20 + (compactRadius - 20) * 0.15, 20 + (compactRadius - 20) * 0.63, compactRadius]
+    : [20, compactRadius, compactRadius, compactRadius];
+  const composerRadius = useTransform(activeProgress, [0.02, 0.14, 0.54, 0.84], targetRadiusRange);
 
-  const composerPaddingX = useTransform(
-    activeProgress,
-    [0.02, 0.14],
-    [24, 0]
-  );
+  const targetPaddingXRange = isMobile
+    ? [24, 24 + (0 - 24) * 0.15, 24 + (0 - 24) * 0.63, 0]
+    : [24, 0, 0, 0];
+  const composerPaddingX = useTransform(activeProgress, [0.02, 0.14, 0.54, 0.84], targetPaddingXRange);
 
-  const composerPaddingY = useTransform(
-    activeProgress,
-    [0.02, 0.14],
-    [20, 0]
-  );
+  const targetPaddingYRange = isMobile
+    ? [20, 20 + (0 - 20) * 0.15, 20 + (0 - 20) * 0.63, 0]
+    : [20, 0, 0, 0];
+  const composerPaddingY = useTransform(activeProgress, [0.02, 0.14, 0.54, 0.84], targetPaddingYRange);
 
   // Water droplet squash & stretch during horizontal motion [0.54 -> 0.84]
-  const dropletScaleX = useTransform(
-    activeProgress,
-    [0.0, 0.54, 0.62, 0.74, 0.84, 0.88],
-    [1.0, 1.0, 1.15, 1.08, 0.95, 1.0]
-  );
+  const targetDropletScaleX = isMobile
+    ? [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    : [1.0, 1.0, 1.15, 1.08, 0.95, 1.0];
+  const dropletScaleX = useTransform(activeProgress, [0.0, 0.54, 0.62, 0.74, 0.84, 0.88], targetDropletScaleX);
 
-  const dropletScaleY = useTransform(
-    activeProgress,
-    [0.0, 0.54, 0.62, 0.74, 0.84, 0.88],
-    [1.0, 1.0, 0.88, 0.94, 1.06, 1.0]
-  );
+  const targetDropletScaleY = isMobile
+    ? [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    : [1.0, 1.0, 0.88, 0.94, 1.06, 1.0];
+  const dropletScaleY = useTransform(activeProgress, [0.0, 0.54, 0.62, 0.74, 0.84, 0.88], targetDropletScaleY);
 
   // Background layers adaptation:
   // 1) Dark glassmorphism layer (same like main search box)
+  const targetDarkGlassOpacity = isMobile ? [1, 1, 1, 1] : [1, 1, 1, 0];
   const darkGlassOpacity = useTransform(
     activeProgress, 
     [0.0, 0.02, 0.54, 0.84], 
-    [1, 1, 1, 0]
+    targetDarkGlassOpacity
   );
 
   // 2) Side button frosted glass layer (adapts during horizontal movement 0.54 -> 0.84)
+  const targetSideButtonBgOpacity = isMobile ? [0, 0] : [0, 1];
   const sideButtonBgOpacity = useTransform(
     activeProgress, 
     [0.54, 0.84], 
-    [0, 1]
+    targetSideButtonBgOpacity
   );
 
-  // Text color adaptation: white/dark in glassmorphism -> blue in side button style
+  // Text color adaptation: white/dark in glassmorphism -> NH brand blue in side button style
+  const targetTextColor = isMobile ? ["#FFFFFF", "#FFFFFF"] : [searchTheme === "white" ? "#1E293B" : "#FFFFFF", "#034EA2"];
   const textColor = useTransform(
     activeProgress,
     [0.54, 0.84],
-    [searchTheme === "white" ? "#1E293B" : "#FFFFFF", "#034EA2"]
+    targetTextColor
   );
 
   // Secondary buttons and prompt cross-fades
-  const controlsOpacity = useTransform(activeProgress, [0.02, 0.08], [1, 0]);
-  const controlsHeight = useTransform(activeProgress, [0.02, 0.09], ["36px", "0px"]);
-  const controlsMarginBottom = useTransform(activeProgress, [0.02, 0.09], ["32px", "0px"]);
-  const promptOpacity = useTransform(activeProgress, [0.02, 0.08], [1, 0]);
+  const controlsOpacity = useTransform(activeProgress, [0.02, isMobile ? 0.25 : 0.08], [1, 0]);
+  const controlsHeight = useTransform(activeProgress, [0.02, isMobile ? 0.30 : 0.09], ["36px", "0px"]);
+  const controlsMarginBottom = useTransform(activeProgress, [0.02, isMobile ? 0.30 : 0.09], [isMobile ? "24px" : "32px", "0px"]);
+  const promptOpacity = useTransform(activeProgress, [0.02, isMobile ? 0.25 : 0.08], [1, 0]);
 
   // Minimized search content (Pulse Lottie + text below) fades in as prompt fades out
-  const minimizedSearchOpacity = useTransform(activeProgress, [0.04, 0.12], [0, 1]);
+  // NOTE: On mobile, we use the mobileFabContent instead, so this stays hidden.
+  const targetMinimizedOpacity = isMobile ? [0, 0] : [0, 1];
+  const minimizedSearchOpacity = useTransform(activeProgress, [0.04, 0.12], targetMinimizedOpacity);
 
   // Moving gradient border around landing search bar edges (vibrant 0.65 on white, 0.25 on dark, fades smoothly on scroll compress)
   const landingBorderOpacity = searchTheme === "white" ? 0.65 : 0.25;
@@ -254,6 +261,9 @@ export default function NHSearchExperience({
   const morphShellOpacity = useTransform(activeProgress, [0.84, 0.88], [1, 0]);
   const composerOverflow = useTransform(activeProgress, (latest) => (latest > 0.02 ? "hidden" : "visible"));
   const controlsOverflow = useTransform(activeProgress, (latest) => (latest > 0.02 ? "hidden" : "visible"));
+
+  // The FAB contents (3 buttons) fade in during the final stage of the morph
+  const fabOpacity = useTransform(activeProgress, [isMobile ? 0.25 : 0.30, isMobile ? 0.50 : 0.45], [0, 1]);
 
   // Primary search state
   const [searchState, setSearchState] = useState<SearchState>(initialState);
@@ -353,6 +363,7 @@ export default function NHSearchExperience({
       // 1. Record current scroll position (only if not already recorded)
       const currentScroll = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
       if (currentScroll > 0 && savedScrollY.current === 0) {
+        // eslint-disable-next-line react-hooks/immutability
         savedScrollY.current = currentScroll;
       }
 
@@ -365,37 +376,21 @@ export default function NHSearchExperience({
       // 3. Freeze document scroll
       const originalBodyOverflow = document.body.style.overflow;
       const originalHtmlOverflow = document.documentElement.style.overflow;
-      const originalBodyTouchAction = document.body.style.touchAction;
 
       document.body.style.overflow = "hidden";
       document.documentElement.style.overflow = "hidden";
-      document.body.style.touchAction = "none";
 
-      // 4. Intercept wheel, touchmove and page-scrolling keys
-      const preventBackgroundScroll = (e: WheelEvent | TouchEvent) => {
+      // Prevent background scrolling only when interacting outside the active modal (e.g. on backdrop)
+      const preventBackdropScroll = (e: WheelEvent | TouchEvent) => {
         const target = e.target as HTMLElement | null;
-
-        // Check if event target is inside the portaled active search modal
         const modalEl = document.getElementById("nh-active-search-modal");
-        if (modalEl && modalEl.contains(target)) {
-          // If inside an intentionally scrollable area within the modal, allow internal scrolling
-          const scrollable = target?.closest(`.${styles.searchShell}, .${styles.resultsRightCol}`) as HTMLElement | null;
-          if (scrollable && scrollable.scrollHeight > scrollable.clientHeight) {
-            if (e instanceof WheelEvent) {
-              const isScrollingUp = e.deltaY < 0;
-              const isScrollingDown = e.deltaY > 0;
-              const isAtTop = scrollable.scrollTop <= 0;
-              const isAtBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
 
-              if ((isScrollingUp && isAtTop) || (isScrollingDown && isAtBottom)) {
-                if (e.cancelable) e.preventDefault();
-              }
-            }
-            return;
-          }
+        // If event is inside the search modal, never intercept or block it
+        if (modalEl && (modalEl === target || modalEl.contains(target))) {
+          return;
         }
 
-        // Outside modal (backdrop or background) — strictly prevent scrolling
+        // Outside modal (backdrop or background) — prevent background leakage
         if (e.cancelable) {
           e.preventDefault();
         }
@@ -404,24 +399,27 @@ export default function NHSearchExperience({
       const preventScrollKeys = (e: KeyboardEvent) => {
         const target = e.target as HTMLElement | null;
         if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA") return;
+        // If inside modal, allow space, PageUp, PageDown, arrow keys for scrolling
+        const modalEl = document.getElementById("nh-active-search-modal");
+        if (modalEl && modalEl.contains(target)) return;
+
         if ([" ", "PageUp", "PageDown", "End", "Home"].includes(e.key)) {
           e.preventDefault();
         }
       };
 
-      window.addEventListener("wheel", preventBackgroundScroll, { passive: false });
-      window.addEventListener("touchmove", preventBackgroundScroll, { passive: false });
+      window.addEventListener("wheel", preventBackdropScroll, { passive: false });
+      window.addEventListener("touchmove", preventBackdropScroll, { passive: false });
       window.addEventListener("keydown", preventScrollKeys, { passive: false });
 
       return () => {
         // Restore document styles
         document.body.style.overflow = originalBodyOverflow;
         document.documentElement.style.overflow = originalHtmlOverflow;
-        document.body.style.touchAction = originalBodyTouchAction;
 
         // Remove event listeners
-        window.removeEventListener("wheel", preventBackgroundScroll);
-        window.removeEventListener("touchmove", preventBackgroundScroll);
+        window.removeEventListener("wheel", preventBackdropScroll);
+        window.removeEventListener("touchmove", preventBackdropScroll);
         window.removeEventListener("keydown", preventScrollKeys);
 
         // Resume Lenis smooth scroll and restore exact scroll position
@@ -460,13 +458,13 @@ export default function NHSearchExperience({
     const targetQuery = searchQuery.trim() || "I have chest pain and need a doctor";
     setQuery(targetQuery);
     
-    // Step 1: Immediately transition to realistic skeleton state
+    // Step 1: Transition to Pulse AI clinical intelligence analyzing state
     setSearchState("skeleton");
     
-    // Step 2: Realistic AI matching delay (750ms)
+    // Step 2: AI clinical intelligence matching delay (1100ms)
     const [results] = await Promise.all([
       getSearchResults(targetQuery, selectedLocation),
-      new Promise((resolve) => setTimeout(resolve, 750)),
+      new Promise((resolve) => setTimeout(resolve, 1100)),
     ]);
 
     // Step 3: Smoothly reveal final results
@@ -599,7 +597,7 @@ export default function NHSearchExperience({
                 paddingRight: composerPaddingX,
                 paddingTop: composerPaddingY,
                 paddingBottom: composerPaddingY,
-                opacity: morphShellOpacity,
+                opacity: isMobile ? 1 : morphShellOpacity,
                 maxWidth: "none",
                 minWidth: 0,
                 minHeight: 0,
@@ -674,6 +672,59 @@ export default function NHSearchExperience({
           />
         )}
 
+        {isMobile && hasScroll && (
+          <>
+            {/* The 3 Action Buttons that fade in as the search UI fades out */}
+            <motion.div 
+              style={{ opacity: fabOpacity, pointerEvents: isDocked ? "auto" : "none" }}
+              className={styles.mobileFabContent}
+            >
+              <Link className={styles.fabLink} href="/doctors" onClick={(e) => e.stopPropagation()}>
+                <span className={styles.fabIconWrap}>
+                  <svg width="20" height="20" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                    <path d="M7.33301 1.83398V4.58398" stroke="white" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M14.667 1.83398V4.58398" stroke="white" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M17.4167 2.75H4.58333C3.57081 2.75 2.75 3.57081 2.75 4.58333V17.4167C2.75 18.4292 3.57081 19.25 4.58333 19.25H17.4167C18.4292 19.25 19.25 18.4292 19.25 17.4167V4.58333C19.25 3.57081 18.4292 2.75 17.4167 2.75Z" stroke="white" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M2.75 8.25H19.25" stroke="white" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M8.25 13.7493L10.0833 15.5827L13.75 11.916" stroke="white" strokeWidth="1.83333" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                <span>Book<br/>Appointment</span>
+              </Link>
+              <div className={styles.fabDivider} aria-hidden="true" />
+              <button
+                type="button"
+                className={styles.fabLink}
+                style={{ border: "none" }}
+                onClick={(e) => {
+                  e.stopPropagation(); // prevent search box from opening
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent("nh:open-search", { detail: { scrollY: window.scrollY } }));
+                  }
+                }}
+              >
+                <span className={styles.fabIconWrap}>
+                  <div className={styles.pulseLottieContainer} aria-hidden="true">
+                    <Lottie animationData={pulseAnimation} loop={true} />
+                  </div>
+                </span>
+                <span>Pulse AI<br/>Search</span>
+              </button>
+              <div className={styles.fabDivider} aria-hidden="true" />
+              <a className={styles.fabLink} href="#app-download-banner" onClick={(e) => e.stopPropagation()}>
+                <span className={styles.fabIconWrap}>
+                  <svg width="20" height="20" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                    <path d="M13.6476 0.675781C14.523 0.694168 15.234 0.949481 15.759 1.70794C16.3096 2.50334 16.1902 3.60656 16.2 4.52036C16.2037 4.864 16.2291 5.41718 16.1655 5.74948C16.6706 5.73485 17.1972 5.75994 17.7041 5.75259C18.6999 5.73818 19.6462 5.63224 20.4624 6.35871C20.9549 6.79375 21.2544 7.4067 21.2948 8.06259C21.3678 9.44683 20.3516 10.5283 18.9765 10.5999C18.9009 10.6249 17.8642 10.6007 17.704 10.6007L13.3896 10.6037C12.7865 10.6048 11.8491 10.5704 11.2844 10.6172C11.2837 10.6091 11.283 10.6009 11.2824 10.5928C11.2548 10.2334 11.2769 9.55103 11.2771 9.16305L11.2783 6.349L11.2771 4.16857C11.2765 3.46614 11.2245 2.93537 11.4607 2.25793C11.8231 1.2185 12.5951 0.756891 13.6476 0.675781Z" fill="white" />
+                    <path d="M2.9581 11.3954C3.64255 11.4101 10.4512 11.3552 10.518 11.4164C10.587 11.4796 10.5758 11.6064 10.5786 11.6931C10.5944 12.181 10.5753 12.6713 10.5749 13.1597L10.5781 16.1594L10.5762 17.8892C10.5787 18.3785 10.5971 18.8648 10.5327 19.3508C10.3918 20.4138 9.40064 21.2846 8.33085 21.3157C7.61441 21.4032 6.9007 21.1148 6.4008 20.6032C5.5816 19.7647 5.67598 18.9589 5.67785 17.9001C5.67963 17.3668 5.67798 16.8336 5.67286 16.3003C5.59097 16.2281 5.06187 16.2595 4.91502 16.26L3.53508 16.2649C2.73281 16.2666 2.06055 16.1788 1.41883 15.6349C0.417136 14.786 0.321846 13.2159 1.16404 12.2279C1.65893 11.6474 2.20088 11.4389 2.9581 11.3954Z" fill="white" />
+                    <path d="M7.97633 0.672988C8.71331 0.590763 9.37294 0.911643 9.89173 1.40803C10.626 2.11058 10.5687 2.94732 10.5641 3.88361L10.5627 5.14523C10.5619 6.9409 10.5352 8.81837 10.574 10.6093L3.21885 10.6085C2.54156 10.5873 1.90293 10.4852 1.3926 9.99015C0.879518 9.49245 0.612287 8.94994 0.605623 8.22796C0.598571 7.46381 0.833714 6.95819 1.36194 6.41363C1.64923 6.11747 2.24847 5.87022 2.64006 5.78564C2.9703 5.71431 3.5562 5.7379 3.91387 5.73848L5.69985 5.7373C5.69332 5.70097 5.68837 5.66436 5.68507 5.62758C5.65213 5.25596 5.68021 4.76434 5.68148 4.37657C5.68371 3.69356 5.60428 2.91945 5.84768 2.27754C6.20746 1.32862 6.96564 0.759628 7.97633 0.672988Z" fill="white" />
+                  </svg>
+                </span>
+                <span>Download<br/>NH Care App</span>
+              </a>
+            </motion.div>
+          </>
+        )}
+
         <DefaultSearchPrompt
           onActivate={handleActivate}
           selectedLocation={selectedLocation}
@@ -681,8 +732,9 @@ export default function NHSearchExperience({
           onSelectActionPill={handleSelectActionPill}
           onOpenPulse={() => handleOpenPulse()}
           searchTheme="dark"
+          isMobile={isMobile}
           promptOpacity={hasScroll ? promptOpacity : undefined}
-          minimizedSearchOpacity={hasScroll ? minimizedSearchOpacity : undefined}
+          minimizedSearchOpacity={hasScroll && !isMobile ? minimizedSearchOpacity : undefined}
           textColor={hasScroll ? textColor : undefined}
           controlsOpacity={hasScroll ? controlsOpacity : undefined}
           controlsHeight={hasScroll ? controlsHeight : undefined}
@@ -696,15 +748,20 @@ export default function NHSearchExperience({
       {mounted && createPortal(
         <AnimatePresence>
           {searchState !== "landing" && (() => {
+            const isPhone = winSize.w <= 640;
             const isCompactModal = searchState === "results" || searchState === "skeleton" || searchState === "pulse";
             const modalTargetTop = typeof window !== "undefined"
-              ? (isCompactModal ? Math.max(20, window.innerHeight * 0.03) : Math.max(60, window.innerHeight * 0.12))
+              ? (isPhone 
+                  ? (isCompactModal ? 10 : 16)
+                  : (isCompactModal ? Math.max(20, window.innerHeight * 0.03) : Math.max(60, window.innerHeight * 0.12)))
               : 100;
             const modalTargetWidth = typeof window !== "undefined"
-              ? Math.min(
-                  searchState === "pulse" ? 1000 : (searchState === "results" || searchState === "skeleton") ? 1080 : 880,
-                  winSize.w - 32
-                )
+              ? (isPhone
+                  ? Math.min(600, winSize.w - 16)
+                  : Math.min(
+                      searchState === "pulse" ? 1000 : (searchState === "results" || searchState === "skeleton") ? 1080 : 880,
+                      winSize.w - 32
+                    ))
               : 880;
 
             const originDeltaY = originRect ? Math.round(originRect.top - modalTargetTop) : 0;
@@ -724,12 +781,12 @@ export default function NHSearchExperience({
                   display: "flex",
                   alignItems: "flex-start",
                   justifyContent: "center",
-                  paddingTop: isCompactModal
-                    ? "max(20px, 3vh)"
-                    : "max(60px, 12vh)",
-                  paddingBottom: "24px",
-                  paddingLeft: "16px",
-                  paddingRight: "16px",
+                  paddingTop: isPhone
+                    ? (isCompactModal ? "10px" : "16px")
+                    : (isCompactModal ? "max(20px, 3vh)" : "max(60px, 12vh)"),
+                  paddingBottom: isPhone ? "10px" : "24px",
+                  paddingLeft: isPhone ? "8px" : "16px",
+                  paddingRight: isPhone ? "8px" : "16px",
                   boxSizing: "border-box",
                   pointerEvents: "auto",
                 }}
@@ -794,7 +851,12 @@ export default function NHSearchExperience({
                     display: "flex",
                     justifyContent: "center",
                     width: modalTargetWidth,
-                    maxHeight: isCompactModal ? "92vh" : "85vh",
+                    height: (searchState === "results" || searchState === "skeleton") 
+                      ? (isPhone ? "calc(100dvh - 24px)" : "min(840px, 90vh)") 
+                      : searchState === "pulse" 
+                      ? (isPhone ? "calc(100dvh - 24px)" : "min(760px, 88vh)") 
+                      : undefined,
+                    maxHeight: isCompactModal ? (isPhone ? "calc(100dvh - 16px)" : "92vh") : (isPhone ? "calc(100dvh - 24px)" : "85vh"),
                     zIndex: 3,
                   }}
                 >
@@ -813,7 +875,7 @@ export default function NHSearchExperience({
                       opacity: 1,
                       y: 0,
                       scale: 1,
-                      borderRadius: 24,
+                      borderRadius: isPhone ? 18 : 24,
                     }}
                     exit={{
                       opacity: 0,
@@ -829,9 +891,15 @@ export default function NHSearchExperience({
                       position: "relative",
                       zIndex: 2,
                       width: "100%",
-                      maxHeight: isCompactModal ? "92vh" : "85vh",
-                      height: searchState === "pulse" ? "min(760px, 88vh)" : undefined,
-                      overflowY: searchState === "pulse" ? "hidden" : "auto",
+                      height: (searchState === "results" || searchState === "skeleton") 
+                        ? (isPhone ? "calc(100dvh - 24px)" : "min(840px, 90vh)") 
+                        : searchState === "pulse" 
+                        ? (isPhone ? "calc(100dvh - 24px)" : "min(760px, 88vh)") 
+                        : undefined,
+                      maxHeight: isCompactModal ? (isPhone ? "calc(100dvh - 16px)" : "92vh") : (isPhone ? "calc(100dvh - 24px)" : "85vh"),
+                      display: (searchState === "results" || searchState === "skeleton" || searchState === "pulse") ? "flex" : undefined,
+                      flexDirection: "column",
+                      overflow: "hidden",
                       overscrollBehavior: "contain",
                       margin: 0,
                       boxSizing: "border-box",
@@ -868,11 +936,20 @@ export default function NHSearchExperience({
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.98 }}
                           transition={{ duration: 0.22, ease: "easeOut" }}
-                          style={{ width: "100%", height: "100%" }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            minHeight: 0,
+                            flex: 1,
+                          }}
                         >
                           <SkeletonResultsCanvas
                             query={query}
                             selectedLocation={selectedLocation}
+                            onClose={handleClose}
+                            onSelectLocation={handleSelectLocation}
                           />
                         </motion.div>
                       )}
@@ -884,7 +961,14 @@ export default function NHSearchExperience({
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 8 }}
                           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                          style={{ width: "100%", height: "100%" }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            minHeight: 0,
+                            flex: 1,
+                          }}
                         >
                           <SearchResultsCanvas
                             query={query || "I have chest pain and need a doctor"}

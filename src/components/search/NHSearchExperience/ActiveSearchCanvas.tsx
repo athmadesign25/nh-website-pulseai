@@ -4,11 +4,21 @@ import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { 
   Paperclip, Mic, ArrowRight, X, 
-  User, Heart, Sparkles, CornerDownLeft, Command
+  User, Heart, Sparkles, CornerDownLeft, Command,
+  Activity, Bone, Brain
 } from "lucide-react";
 import styles from "./NHSearchExperience.module.css";
 import { PredictiveState, getPredictiveCompletion, fetchLiveApiPredictions } from "./searchData";
 import LocationSelector from "./LocationSelector";
+
+const MOBILE_POPULAR_SEARCHES = [
+  { label: "Cardiologist", query: "Cardiologist near me", icon: Heart },
+  { label: "Chest pain", query: "I have chest pain", icon: Activity },
+  { label: "Orthopaedic", query: "Orthopaedic doctor", icon: Bone },
+  { label: "Knee pain", query: "I have knee pain", icon: Activity },
+  { label: "Neurologist", query: "Neurologist specialist", icon: Brain },
+  { label: "Pediatrician", query: "Pediatrician near me", icon: User },
+];
 
 interface ActiveSearchCanvasProps {
   query: string;
@@ -66,22 +76,9 @@ export default function ActiveSearchCanvas({
     };
   }, [query, selectedLocation]);
 
-  // Merge predictions:
-  // If query is an explicit demo key ("c", "ch", "chest", "k", "kn", "knee"), use local scenario
-  // Otherwise use livePrediction if available, else fallback to localPrediction
-  const isHardcodedScenario = 
-    query.trim().toLowerCase() === "c" || 
-    query.trim().toLowerCase() === "ch" || 
-    query.trim().toLowerCase() === "chest" || 
-    query.trim().toLowerCase().startsWith("chest p") || 
-    query.trim().toLowerCase() === "k" || 
-    query.trim().toLowerCase() === "kn" || 
-    query.trim().toLowerCase() === "knee" || 
-    query.trim().toLowerCase().startsWith("knee p");
-
-  const prediction = isHardcodedScenario 
-    ? (localPrediction || livePrediction)
-    : (livePrediction || localPrediction);
+  // Merge predictions: Always prioritize live API predictions from the backend!
+  // If the API call hasn't returned yet or is unreachable, fallback to local prediction
+  const prediction = livePrediction || localPrediction;
 
   // Auto-focus input when opening
   useEffect(() => {
@@ -183,11 +180,27 @@ export default function ActiveSearchCanvas({
               setSelectedSugIndex(-1);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Start typing a symptom, condition, specialty or doctor..."
+            placeholder="Start typing symptom, specialty or doctor..."
             aria-label="Search symptoms, conditions or doctors"
             autoComplete="off"
             spellCheck="false"
           />
+
+          {/* Clear Button when query has text */}
+          {query.length > 0 && (
+            <button
+              type="button"
+              className={styles.inputClearBtn}
+              onClick={() => {
+                onQueryChange("");
+                setSelectedSugIndex(-1);
+                inputRef.current?.focus();
+              }}
+              aria-label="Clear input text"
+            >
+              <X size={14} />
+            </button>
+          )}
 
           {/* Inline ghost predictive sentence overlay */}
           {prediction && query.length > 0 && (
@@ -276,6 +289,30 @@ export default function ActiveSearchCanvas({
           <p className={styles.emptyPromptSub}>
             Start typing a symptom, condition, specialty, procedure or doctor name.
           </p>
+
+          {/* Mobile quick-tap popular categories and conditions */}
+          <div className={styles.mobileQuickTray}>
+            <span className={styles.mobileQuickLabel}>Popular searches</span>
+            <div className={styles.mobileQuickChips}>
+              {MOBILE_POPULAR_SEARCHES.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    className={styles.mobileQuickChip}
+                    onClick={() => {
+                      onQueryChange(item.query);
+                      onSubmit(item.query);
+                    }}
+                  >
+                    <Icon size={13} className={styles.mobileQuickChipIcon} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </motion.div>
       )}
 

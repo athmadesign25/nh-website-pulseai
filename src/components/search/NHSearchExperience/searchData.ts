@@ -511,6 +511,50 @@ export const CARDIOLOGY_RESULTS: SearchResultsData = {
       availableToday: true,
       consultationType: "both",
     },
+    {
+      id: "doc-shashidhar",
+      name: "Dr. Shashidhar S.",
+      speciality: "Cardiac Surgeon",
+      hospital: "Narayana Health City",
+      experience: "21 years experience",
+      image: "/assets/doctor_1.png",
+      city: "Bangalore",
+      availableToday: true,
+      consultationType: "both",
+    },
+    {
+      id: "doc-kavitha",
+      name: "Dr. Kavitha Chivukula",
+      speciality: "Pediatric Cardiologist",
+      hospital: "Narayana Multispeciality Hospital",
+      experience: "16 years experience",
+      image: "/assets/doctor_2.png",
+      city: "Bangalore",
+      availableToday: true,
+      consultationType: "both",
+    },
+    {
+      id: "doc-sanjay",
+      name: "Dr. Sanjay Mehrotra",
+      speciality: "Director & Senior Cardiologist",
+      hospital: "Narayana Institute of Cardiac Sciences",
+      experience: "26 years experience",
+      image: "/assets/doctor_3.png",
+      city: "Bangalore",
+      availableToday: true,
+      consultationType: "both",
+    },
+    {
+      id: "doc-colin",
+      name: "Dr. Colin John",
+      speciality: "Adult & Pediatric Cardiac Surgery",
+      hospital: "Mazumdar Shaw Medical Center",
+      experience: "28 years experience",
+      image: "/assets/hero_doctor.png",
+      city: "Bangalore",
+      availableToday: true,
+      consultationType: "both",
+    },
   ],
   relatedSpecialties: [
     "Cardiology",
@@ -624,6 +668,50 @@ export const ORTHOPAEDICS_RESULTS: SearchResultsData = {
       hospital: "Narayana Multispeciality Hospital",
       experience: "11 years experience",
       image: "/assets/doctor_2.png",
+      city: "Bangalore",
+      availableToday: true,
+      consultationType: "both",
+    },
+    {
+      id: "doc-sridhar",
+      name: "Dr. M. K. Sridhar",
+      speciality: "Senior Joint Replacement Surgeon",
+      hospital: "Narayana Health City",
+      experience: "24 years experience",
+      image: "/doctors/doc_bagirath.jpg",
+      city: "Bangalore",
+      availableToday: true,
+      consultationType: "both",
+    },
+    {
+      id: "doc-balaji",
+      name: "Dr. R. Balaji",
+      speciality: "Spine & Orthopaedic Specialist",
+      hospital: "Mazumdar Shaw Medical Center",
+      experience: "19 years experience",
+      image: "/doctors/doc_devi_shetty.jpg",
+      city: "Bangalore",
+      availableToday: true,
+      consultationType: "both",
+    },
+    {
+      id: "doc-sneha",
+      name: "Dr. Sneha Hegde",
+      speciality: "Knee & Shoulder Specialist",
+      hospital: "Narayana Multispeciality Hospital",
+      experience: "15 years experience",
+      image: "/doctors/doc_ananya.jpg",
+      city: "Bangalore",
+      availableToday: true,
+      consultationType: "both",
+    },
+    {
+      id: "doc-rajesh",
+      name: "Dr. Rajesh Kumar",
+      speciality: "Trauma & Reconstructive Surgeon",
+      hospital: "Narayana Health City",
+      experience: "18 years experience",
+      image: "/assets/hero_doctor.png",
       city: "Bangalore",
       availableToday: true,
       consultationType: "both",
@@ -770,13 +858,15 @@ export function mapApiResultsToSearchData(
     };
   });
 
-  // Ensure we have at least 4 doctor cards so the 2x2 grid is balanced
-  if (mappedDocs.length > 0 && mappedDocs.length < 4) {
-    const fallbackList = cleanQ.includes("knee") || cleanQ.includes("ortho") 
+  // If the query is specifically knee/cardio and we have fewer than 8, pad with matching specialists
+  const isKneeQuery = cleanQ.includes("knee") || cleanQ.includes("ortho") || cleanQ.includes("joint");
+  const isHeartQuery = cleanQ.includes("heart") || cleanQ.includes("cardio") || cleanQ.includes("chest");
+  if (mappedDocs.length > 0 && mappedDocs.length < 8 && (isKneeQuery || isHeartQuery)) {
+    const fallbackList = isKneeQuery 
       ? ORTHOPAEDICS_RESULTS.doctors 
       : CARDIOLOGY_RESULTS.doctors;
     for (const fb of fallbackList) {
-      if (mappedDocs.length >= 4) break;
+      if (mappedDocs.length >= 8) break;
       if (!mappedDocs.some((d) => d.name === fb.name)) {
         mappedDocs.push({
           ...fb,
@@ -890,6 +980,13 @@ export async function getSearchResults(
         apiResults.procedures.length > 0 ||
         apiResults.treatments.length > 0)
     ) {
+      console.log(`[Search Engine] Live API returned results for "${query}":`, {
+        doctors: apiResults.doctors.length,
+        specialities: apiResults.specialities.length,
+        procedures: apiResults.procedures.length,
+        treatments: apiResults.treatments.length,
+        blogs: apiResults.blogs.length,
+      });
       return mapApiResultsToSearchData(apiResults, query, location);
     }
   } catch (err) {

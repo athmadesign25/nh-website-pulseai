@@ -305,7 +305,7 @@
 /* ── Responsive styles (Mobile & Tablet: Horizontal Bottom Navigation Bar) ── */
 @media (max-width: 900px) {
   .container {
-    display: flex !important;
+    display: none !important; /* Replaced entirely by the morphing NHSearchExperience on mobile */
     position: fixed !important;
     top: auto !important;
     bottom: max(14px, env(safe-area-inset-bottom)) !important;

@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import https from "https";
 
-const INTERNAL_API_BASE = "https://172.19.1.11:9870";
-const SEARCH_PATH = "/api/healthcare-search-projections/data";
+const INTERNAL_API_BASE = 
+  process.env.NH_SEARCH_API_BASE || 
+  process.env.NEXT_PUBLIC_NH_API_BASE || 
+  "https://172.19.1.11:9870";
+const SEARCH_PATH = 
+  process.env.NH_SEARCH_API_PATH || 
+  "/api/healthcare-search-projections/data";
 
 // Server-side agent; disables cert verification only for the known internal IP.
 // Client-side SSL validation is unaffected.
@@ -10,18 +15,27 @@ const internalAgent = new https.Agent({ rejectUnauthorized: false });
 
 function fetchInternal(url: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
-    const req = https.request(url, { agent: internalAgent }, (res) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort();
+      reject(new Error("Upstream connect timeout"));
+    }, 3500);
+
+    const req = https.request(url, { agent: internalAgent, signal: controller.signal }, (res) => {
       let body = "";
       res.on("data", (chunk: Buffer) => { body += chunk.toString(); });
       res.on("end", () => {
+        clearTimeout(timeout);
         try { resolve(JSON.parse(body)); }
         catch (e) { reject(new Error("Invalid JSON from upstream")); }
       });
     });
-    req.on("error", reject);
-    req.setTimeout(8000, () => {
-      req.destroy(new Error("Upstream request timed out"));
+
+    req.on("error", (err) => {
+      clearTimeout(timeout);
+      reject(err);
     });
+
     req.end();
   });
 }

@@ -15,6 +15,7 @@ interface DefaultSearchPromptProps {
   onSelectActionPill: (action: "doctor" | "symptoms") => void;
   onOpenPulse?: () => void;
   searchTheme?: "dark" | "white";
+  isMobile?: boolean;
   promptOpacity?: MotionValue<number>;
   minimizedSearchOpacity?: MotionValue<number>;
   textColor?: MotionValue<string>;
@@ -34,6 +35,7 @@ export default function DefaultSearchPrompt({
   onSelectActionPill,
   onOpenPulse,
   searchTheme = "dark",
+  isMobile = false,
   promptOpacity,
   minimizedSearchOpacity,
   textColor,
@@ -169,57 +171,61 @@ export default function DefaultSearchPrompt({
           </button>
 
           {/* Quick Action: Describe my symptoms - unboxed clean text + icon, NO border/box */}
-          <button
-            type="button"
-            className={styles.landingTextAction}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              background: "none",
-              backgroundColor: "transparent",
-              border: "none",
-              outline: "none",
-              padding: "0 4px",
-              color: "#FFFFFF",
-              cursor: "pointer",
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectActionPill("symptoms");
-            }}
-          >
-            <Heart size={14} style={{ color: "rgba(255, 255, 255, 0.88)" }} />
-            <span style={{ color: "#FFFFFF", fontWeight: 450, fontSize: "13.5px" }}>Describe my symptoms</span>
-          </button>
+          {!isMobile && (
+            <button
+              type="button"
+              className={styles.landingTextAction}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "none",
+                backgroundColor: "transparent",
+                border: "none",
+                outline: "none",
+                padding: "0 4px",
+                color: "#FFFFFF",
+                cursor: "pointer",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectActionPill("symptoms");
+              }}
+            >
+              <Heart size={14} style={{ color: "rgba(255, 255, 255, 0.88)" }} />
+              <span style={{ color: "#FFFFFF", fontWeight: 450, fontSize: "13.5px" }}>Describe my symptoms</span>
+            </button>
+          )}
         </div>
 
         {/* Right side controls: Microphone (standalone icon) + Primary Submit Arrow (the ONLY filled button) */}
-        <div className={styles.bottomControlsRight}>
-          <button
-            type="button"
-            className={styles.standaloneIconBtn}
-            aria-label="Voice search"
-            onClick={(e) => {
-              e.stopPropagation();
-              onActivate();
-            }}
-          >
-            <Mic size={17} />
-          </button>
+        {!isMobile && (
+          <div className={styles.bottomControlsRight}>
+            <button
+              type="button"
+              className={styles.standaloneIconBtn}
+              aria-label="Voice search"
+              onClick={(e) => {
+                e.stopPropagation();
+                onActivate();
+              }}
+            >
+              <Mic size={17} />
+            </button>
 
-          <button
-            type="button"
-            className={styles.submitArrowBtn}
-            aria-label="Submit search"
-            onClick={(e) => {
-              e.stopPropagation();
-              onActivate();
-            }}
-          >
-            <ArrowUp size={16} strokeWidth={2.5} />
-          </button>
-        </div>
+            <button
+              type="button"
+              className={styles.submitArrowBtn}
+              aria-label="Submit search"
+              onClick={(e) => {
+                e.stopPropagation();
+                onActivate();
+              }}
+            >
+              <ArrowUp size={16} strokeWidth={2.5} />
+            </button>
+          </div>
+        )}
       </motion.div>
     </div>
   );

@@ -276,23 +276,37 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
   position: relative;
+  overflow: hidden;
 }
 
 .canvasStage {
   display: grid;
   grid-template-columns: 100%;
-  grid-template-rows: auto;
+  grid-template-rows: 100%;
   width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 18px;
 }
 
 .canvasStageLayer {
   grid-column: 1;
   grid-row: 1;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+  position: relative;
+  overflow: visible;
   box-sizing: border-box;
 }
 
@@ -302,7 +316,8 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .headerLeftGroup {
@@ -421,6 +436,7 @@
   border-radius: 2px;
   margin: 10px 0 16px;
   box-shadow: 0 0 12px rgba(237, 28, 36, 0.35);
+  flex-shrink: 0;
 }
 
 /* ── State 01: Default Landing Elements ── */
@@ -936,6 +952,49 @@
   font-weight: 400;
 }
 
+.inputClearBtn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  z-index: 5;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.inputClearBtn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+}
+
+.themeWhite .inputClearBtn {
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(15, 23, 42, 0.7);
+}
+
+.themeWhite .inputClearBtn:hover {
+  background: rgba(0, 0, 0, 0.15);
+  color: #0F172A;
+}
+
+.mobileQuickTray {
+  display: none;
+}
+
+.mobileSegmentedControl {
+  display: none;
+}
+
 /* ── Inline Ghost Predictive Sentence Overlay ── */
 .ghostTextOverlay {
   position: absolute;
@@ -1380,18 +1439,68 @@
 .resultsSplitLayout {
   display: grid;
   grid-template-columns: minmax(0, 67fr) minmax(280px, 33fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: clamp(24px, 3vw, 36px);
-  margin-top: 18px;
-  align-items: start;
+  margin-top: 14px;
+  align-items: stretch;
   width: 100%;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
-/* ── Primary Dominant Left Column ── */
+/* ── Primary Dominant Left Column (Independent Vertical Scroll under Sticky Pulse AI) ── */
 .resultsLeftCol {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+  padding-bottom: 96px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.resultsLeftCol:focus-visible {
+  outline: none;
+}
+
+.resultsLeftCol::-webkit-scrollbar {
+  width: 6px;
+}
+
+.resultsLeftCol::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.resultsLeftCol::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+}
+
+.themeWhite .resultsLeftCol,
+[data-search-theme="white"] .resultsLeftCol {
+  scrollbar-color: #94A3B8 transparent;
+}
+
+.themeWhite .resultsLeftCol::-webkit-scrollbar-thumb,
+[data-search-theme="white"] .resultsLeftCol::-webkit-scrollbar-thumb {
+  background: #94A3B8;
+}
+
+.themeWhite .resultsLeftCol::-webkit-scrollbar-thumb:hover,
+[data-search-theme="white"] .resultsLeftCol::-webkit-scrollbar-thumb:hover {
+  background: #64748B;
 }
 
 .primaryResultsSection {
@@ -1446,6 +1555,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   width: 100%;
+  touch-action: pan-y;
 }
 
 .refDoctorCard {
@@ -1460,6 +1570,7 @@
   overflow: hidden;
   height: 310px;
   min-height: 310px;
+  touch-action: pan-y;
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.22s ease;
   box-sizing: border-box;
@@ -1482,6 +1593,10 @@
   transform: scale(1.35);
   transform-origin: center 25%;
   display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
   transition: transform 0.35s ease;
 }
 
@@ -1753,42 +1868,53 @@
   color: #7DD3FC;
 }
 
-/* Pulse AI Recommendation Placement Wrappers: Desktop at bottom, Mobile above secondary */
+/* Pulse AI Recommendation Placement Wrappers */
 .desktopPulseRowWrap {
   display: block;
   width: 100%;
-  margin-top: 20px;
 }
 
 .mobilePulseRowWrap {
   display: none;
 }
 
-/* Horizontal Pulse AI Recommendation Card */
+/* Horizontal Pulse AI Recommendation Card (Anchored at true bottom of viewport modal) */
 .refPulseRow {
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  right: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 13px 22px;
+  padding: 12px 20px;
   border-radius: 16px;
-  position: relative;
   width: 100%;
   box-sizing: border-box;
-  background: linear-gradient(135deg, rgba(20, 30, 55, 0.90) 0%, rgba(18, 24, 38, 0.92) 50%, rgba(42, 24, 46, 0.88) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(135deg, rgba(20, 30, 55, 0.94) 0%, rgba(18, 24, 38, 0.96) 50%, rgba(42, 24, 46, 0.94) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  /* Ambient glowing shadow aura behind Pulse AI (magenta / crimson / blue glow) */
+  box-shadow: 
+    0 -12px 32px 0 rgba(237, 28, 36, 0.22),
+    0 -6px 20px 0 rgba(139, 92, 246, 0.28),
+    0 -2px 10px 0 rgba(0, 196, 255, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.50);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  margin-top: 0;
+  margin: 0;
 }
 
 .refPulseRow:hover {
   transform: translateY(-1px);
   border-color: rgba(255, 255, 255, 0.22);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 
+    0 -14px 36px 0 rgba(237, 28, 36, 0.28),
+    0 -8px 24px 0 rgba(139, 92, 246, 0.34),
+    0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .refPulseLeft {
@@ -2713,7 +2839,19 @@
   flex-direction: column;
   gap: 28px;
   min-width: 0;
+  min-height: 0;
   width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  padding-bottom: 88px;
+  scrollbar-width: none;
+}
+
+.resultsRightCol::-webkit-scrollbar {
+  display: none;
 }
 
 .editorialSection {
@@ -3024,6 +3162,180 @@
   }
 }
 
+/* ── Central Pulse AI Clinical Intelligence Analyzing State (Centered in Results Section) ── */
+.pulseAnalyzingCentralWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 1;
+  min-height: 380px;
+  padding: 36px 20px;
+  text-align: center;
+  position: relative;
+  z-index: 5;
+  box-sizing: border-box;
+}
+
+.pulseAnalyzingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  color: #A78BFA;
+  font-size: 11.5px;
+  font-weight: 550;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.15);
+}
+
+.pulseAnalyzingBadgeIcon {
+  color: #00C4FF;
+  animation: pulseDot 1.4s ease-in-out infinite;
+}
+
+.pulseAnalyzingTitle {
+  font-size: clamp(20px, 2.8vw, 26px);
+  font-weight: 650;
+  color: #FFFFFF;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  margin: 0 0 10px 0;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+.pulseAnalyzingSubtitle {
+  font-size: clamp(13px, 1.5vw, 15px);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  max-width: 580px;
+  margin: 0 0 26px 0;
+}
+
+.pulseAnalyzingSubtitle strong {
+  color: #38BDF8;
+  font-weight: 600;
+}
+
+/* Lottie Orb Container with Ambient Glow */
+.pulseAnalyzingLottieWrap {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.pulseAnalyzingGlowAura {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 196, 255, 0.38) 0%,
+    rgba(139, 92, 246, 0.32) 45%,
+    rgba(237, 28, 36, 0.16) 75%,
+    transparent 100%
+  );
+  filter: blur(16px);
+  -webkit-filter: blur(16px);
+  animation: pulseGlowAura 2.6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes pulseGlowAura {
+  0% {
+    transform: scale(0.90);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(1.14);
+    opacity: 0.95;
+  }
+}
+
+.pulseAnalyzingLottieBox {
+  position: relative;
+  z-index: 2;
+  width: 82px;
+  height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Micro-step indicator pill below the star */
+.pulseAnalyzingStepPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13px;
+  font-weight: 450;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+}
+
+.pulseAnalyzingStepDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00C4FF;
+  box-shadow: 0 0 8px rgba(0, 196, 255, 0.8);
+  animation: pulseDot 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* White Theme Adjustments */
+.themeWhite .pulseAnalyzingTitle,
+[data-search-theme="white"] .pulseAnalyzingTitle {
+  color: #0F172A !important;
+  text-shadow: none !important;
+}
+
+.themeWhite .pulseAnalyzingSubtitle,
+[data-search-theme="white"] .pulseAnalyzingSubtitle {
+  color: #475569 !important;
+}
+
+.themeWhite .pulseAnalyzingSubtitle strong,
+[data-search-theme="white"] .pulseAnalyzingSubtitle strong {
+  color: #034EA2 !important;
+}
+
+.themeWhite .pulseAnalyzingBadge,
+[data-search-theme="white"] .pulseAnalyzingBadge {
+  background: rgba(3, 78, 162, 0.08) !important;
+  border-color: rgba(3, 78, 162, 0.22) !important;
+  color: #034EA2 !important;
+}
+
+.themeWhite .pulseAnalyzingStepPill,
+[data-search-theme="white"] .pulseAnalyzingStepPill {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(3, 78, 162, 0.16) !important;
+  color: #1E293B !important;
+  box-shadow: 0 4px 16px rgba(3, 78, 162, 0.08) !important;
+}
+
 /* ── Responsive Viewports ── */
 @media (max-width: 1024px) {
   .stateLanding {
@@ -3095,28 +3407,165 @@
   }
 
   .topHeaderRow {
-    margin-bottom: 12px !important;
+    margin-bottom: 10px !important;
   }
 
-  .resultsSplitLayout {
-    grid-template-columns: 1fr !important;
-    gap: 18px !important;
-    margin-top: 12px !important;
+  /* ── Mobile Segmented Control ── */
+  .mobileSegmentedControl {
+    display: flex !important;
+    gap: 6px;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .doctorsGrid,
-  .refDoctorsGrid {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
+  .themeWhite .mobileSegmentedControl {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.06);
   }
 
-  .bottomPillsGroup {
+  .mobileSegmentBtn {
+    flex: 1;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.65);
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+
+  .themeWhite .mobileSegmentBtn {
+    color: rgba(15, 23, 42, 0.6);
+  }
+
+  .mobileSegmentBtnActive {
+    background: rgba(255, 255, 255, 0.16);
+    color: #FFFFFF;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  }
+
+  .themeWhite .mobileSegmentBtnActive {
+    background: #FFFFFF;
+    color: #034EA2;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Hide redundant empty prompt subtext on mobile */
+  .emptyPromptSub {
+    display: none !important;
+  }
+
+  /* ── Mobile Quick Tray (Interactive Popular Search Chips) ── */
+  .mobileQuickTray {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
     width: 100%;
   }
 
-  .resultsCategoryHeader {
-    flex-direction: column;
-    align-items: flex-start;
+  .mobileQuickLabel {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .themeWhite .mobileQuickLabel {
+    color: rgba(15, 23, 42, 0.5);
+  }
+
+  .mobileQuickChips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .mobileQuickChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    font-weight: 450;
+    cursor: pointer;
+    min-height: 34px;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+
+  .mobileQuickChip:active {
+    transform: scale(0.96);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .themeWhite .mobileQuickChip {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #1E293B;
+  }
+
+  .mobileQuickChipIcon {
+    color: #00C4FF;
+  }
+
+  .themeWhite .mobileQuickChipIcon {
+    color: #034EA2;
+  }
+
+  /* ── Results Split Layout on Mobile ── */
+  .resultsSplitLayout {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    gap: 0 !important;
+    margin-top: 4px !important;
+  }
+
+  .resultsSplitLayout[data-mobile-tab="doctors"] .resultsRightCol {
+    display: none !important;
+  }
+
+  .resultsSplitLayout[data-mobile-tab="doctors"] .resultsLeftCol {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    padding-bottom: 64px !important;
+  }
+
+  .resultsSplitLayout[data-mobile-tab="care"] .resultsLeftCol {
+    display: none !important;
+  }
+
+  .resultsSplitLayout[data-mobile-tab="care"] .resultsRightCol {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    padding-bottom: 64px !important;
+  }
+
+  .pressEnterHint {
+    display: none !important;
   }
 
   /* ── Active Search Bar on Mobile ── */
@@ -3255,55 +3704,65 @@
     font-size: 11px !important;
   }
 
-  /* ── Pulse AI Card on Mobile (Sitting directly above secondary results) ── */
+  /* ── Sticky Pulse AI Bar on Mobile ── */
   .desktopPulseRowWrap {
     display: none !important;
   }
 
   .mobilePulseRowWrap {
-    display: block !important;
-    width: 100% !important;
-    margin-bottom: 12px !important;
+    display: none !important;
   }
 
   .refPulseRow {
-    padding: 10px 12px !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    border-radius: 12px !important;
-  }
-
-  .refPulseLeft {
-    gap: 10px !important;
-  }
-
-  .refPulseIconBox {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 10px !important;
-  }
-
-  .refPulseTitle {
-    font-size: 12.5px !important;
-  }
-
-  .refPulseBadge {
-    font-size: 8.5px !important;
-    padding: 1.5px 5px !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 20 !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    padding: 6px 12px !important;
+    border-radius: 14px !important;
+    margin: 0 !important;
   }
 
   .refPulseSubtext {
-    display: -webkit-box !important;
-    -webkit-line-clamp: 1 !important;
-    line-clamp: 1 !important;
-    -webkit-box-orient: vertical !important;
+    display: none !important;
+  }
+
+  .refPulseLeft {
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .refPulseIconBox {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 9px !important;
+  }
+
+  .refPulseTitleLine {
+    gap: 6px !important;
+  }
+
+  .refPulseTitle {
+    font-size: 11.5px !important;
+    font-weight: 550 !important;
+    white-space: nowrap !important;
     overflow: hidden !important;
-    font-size: 11px !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .refPulseBadge {
+    font-size: 8px !important;
+    padding: 1px 4px !important;
   }
 
   .refPulseBtn {
-    padding: 6px 12px !important;
+    padding: 5px 12px !important;
     font-size: 11.5px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
   }
 
   /* ── Pulse AI Clinical Assistant (Mobile Chat Layout) ── */
@@ -4776,15 +5235,22 @@
   color: #023070 !important;
 }
 
-/* Results Pulse Recommendation Row (White Mode - Clean, solid, no rainbow/pink gradient) */
+/* Results Pulse Recommendation Row (White Mode - Clean with ambient shadow aura behind) */
 .themeWhite .refPulseRow,
 [data-search-theme="white"] .refPulseRow {
-  background: #FFFFFF !important;
-  border: 1px solid #E2E8F0 !important;
+  background: rgba(246, 250, 255, 0.97) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(186, 230, 253, 0.85) !important;
   border-radius: 16px !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
-  margin-top: 0 !important;
-  padding: 13px 22px !important;
+  /* Ambient soft pink / magenta / sky blue shadow aura behind Pulse AI */
+  box-shadow: 
+    0 -16px 36px 0 rgba(244, 114, 182, 0.35),
+    0 -8px 24px 0 rgba(237, 28, 36, 0.18),
+    0 -4px 14px 0 rgba(56, 189, 248, 0.25),
+    0 4px 16px rgba(15, 23, 42, 0.06) !important;
+  margin: 0 !important;
+  padding: 12px 20px !important;
   width: 100% !important;
 }
 
@@ -4792,7 +5258,10 @@
 [data-search-theme="white"] .refPulseRow:hover {
   background: #FFFFFF !important;
   border-color: #CBD5E1 !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07) !important;
+  box-shadow: 
+    0 -18px 40px 0 rgba(244, 114, 182, 0.42),
+    0 -10px 28px 0 rgba(237, 28, 36, 0.22),
+    0 6px 20px rgba(0, 0, 0, 0.08) !important;
 }
 
 .themeWhite .refPulseIconBox,
@@ -5365,5 +5834,69 @@
     animation: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Mobile Morphing FAB Styles (Bottom Navigation Bar)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.mobileFabContent {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+}
+
+.fabLink {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 13px 6px;
+  color: #fff;
+  text-decoration: none;
+  background: transparent;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 11px;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.1;
+  transition: opacity 0.15s ease, transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fabLink:active {
+  transform: scale(0.94);
+  opacity: 0.8;
+}
+
+.fabLink:active .fabIconWrap {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.fabIconWrap {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.15s ease;
+}
+
+.fabDivider {
+  height: auto;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.12);
+  margin: 12px 0;
+}
+
 
 
