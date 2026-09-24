@@ -257,10 +257,6 @@ export default function NHSearchExperience({
   const landingBorderOpacity = searchTheme === "white" ? 0.65 : 0.25;
   const gradientBorderOpacity = useTransform(activeProgress, [0.0, 0.02, 0.10], [landingBorderOpacity, landingBorderOpacity, 0]);
 
-  // Ambient gradient glow around perimeter (vibrant on hover, fades smoothly on scroll compress)
-  const landingGlowOpacity = searchTheme === "white" ? 0.40 : 0.22;
-  const gradientGlowOpacity = useTransform(activeProgress, [0.0, 0.02, 0.10], [landingGlowOpacity, landingGlowOpacity, 0]);
-
   // At the end of merge, morphShellOpacity fades out into the static docked button in FloatingQuickActions
   const morphShellOpacity = useTransform(activeProgress, [0.84, 0.88], [1, 0]);
   const composerOverflow = useTransform(activeProgress, (latest) => (latest > 0.02 ? "hidden" : "visible"));
@@ -626,29 +622,27 @@ export default function NHSearchExperience({
           ease: [0.16, 1, 0.3, 1],
         }}
       >
-        {/* Layer 0: Ambient Motion Gradient Glow on perimeter */}
-        {hasScroll && searchState === "landing" && (
-          <motion.div
-            className={styles.animatedBorderGlow}
-            style={{
-              opacity: gradientGlowOpacity,
-            }}
-            aria-hidden="true"
-          />
-        )}
-
         {/* Layer 1: Dark glass background layer */}
         {hasScroll && searchState === "landing" && (
           <motion.div
-            className={styles.landingDarkGlassLayer}
             aria-hidden="true"
             style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "inherit",
+              background: "rgba(22, 28, 36, 0.28)",
+              backdropFilter: "blur(24px) saturate(140%)",
+              WebkitBackdropFilter: "blur(24px) saturate(140%)",
+              border: "1px solid rgba(255, 255, 255, 0.14)",
+              boxShadow: "0 16px 40px -10px rgba(0, 0, 0, 0.35), inset 0 1px 1.5px rgba(255, 255, 255, 0.12)",
               opacity: darkGlassOpacity,
+              pointerEvents: "none",
+              zIndex: 1,
             }}
           />
         )}
 
-        {/* Layer 1.5: Animated Motion Gradient Border Outline */}
+        {/* Animated Motion Gradient Border Outline (just outline, 20% opacity, 1px thickness in both modes) */}
         {hasScroll && searchState === "landing" && (
           <motion.div
             className={styles.animatedBorderOutline}
